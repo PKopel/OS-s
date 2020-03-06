@@ -4,8 +4,8 @@
 #include <stdio.h>
 
 struct Pair{
-    FILE* file1;
-    FILE* file2;
+    FILE* file_a;
+    FILE* file_b;
 };
 
 struct Sequence{
