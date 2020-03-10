@@ -28,7 +28,7 @@ struct BlockTable{
     int size;
 };
 
-struct BlockTable create_table(int pair_number);
+struct BlockTable create_table(struct TmpFiles sequence);
 struct Sequence define_sequence(char* sequence);
 struct TmpFiles compare(struct Sequence sequence);
 struct Block create_block(FILE* tmp_file);

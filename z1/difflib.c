@@ -4,31 +4,31 @@
 
 
 struct Pair create_pair(char* filename_a, char* filename_b){
-    struct Pair newPair;
-    newPair.file_a = filename_a;
-    newPair.file_b = filename_b;
-    return newPair;
+    struct Pair new_pair;
+    new_pair.file_a = filename_a;
+    new_pair.file_b = filename_b;
+    return new_pair;
 }
 
 struct Sequence define_sequence(char* sequence){
     char* words = strtok(sequence," ");
     int length = strlen(sequence);
     
-    struct Sequence newSequence;
-    newSequence.size = 0;
+    struct Sequence new_sequence;
+    new_sequence.size = 0;
     for (int i = 0; i< length; i ++){
-        if (sequence[i]==':') newSequence.size++;
+        if (sequence[i]==':') new_sequence.size++;
     }
-    newSequence.sequence =
-        (struct Pair*)calloc(newSequence.size,sizeof(struct Pair));
+    new_sequence.sequence =
+        (struct Pair*)calloc(new_sequence.size,sizeof(struct Pair));
     
     for (int i = 0; words != NULL; i++)
     {
-        newSequence.sequence[i] = 
+        new_sequence.sequence[i] = 
             create_pair(strtok(words,":"),strtok(NULL,":"));
         words = strtok(NULL," ");
     }   
-    return newSequence;
+    return new_sequence;
 }
 
 FILE* compare_pair(struct Pair pair){
@@ -65,7 +65,7 @@ struct TmpFiles compare(struct Sequence sequence){
 }
 
 struct Block create_block(FILE* tmp_file){
-    struct Block newBlock;
+    struct Block new_block;
     FILE* start = tmp_file;
     char current, previous;
     int line_size = 0, operations = 0;
@@ -77,22 +77,34 @@ struct Block create_block(FILE* tmp_file){
         }
     }
     tmp_file = start;
-    newBlock.size = operations;
-    newBlock.operations = 
+    new_block.size = operations;
+    new_block.operations = 
         (char**)calloc(operations,sizeof(char**));
     int i = 0;
     while((current = fgetc(tmp_file)) != EOF){
         if (current <= 57 && current >= 48 && previous == '\n'){
-            newBlock.operations[i] = 
+            new_block.operations[i] = 
                 (char*)calloc(line_size,sizeof(char*));
-            fread(newBlock.operations[i],sizeof(char*),line_size,start);
+            fread(new_block.operations[i],sizeof(char*),line_size,start);
             line_size=0;
         } else {
             previous = current;
             line_size++;
         }
     }
-    return newBlock;  
+    return new_block;  
+}
+
+struct BlockTable create_table(struct TmpFiles sequence){
+    struct BlockTable new_table;
+    new_table.table = 
+        (struct Block*)calloc(sequence.size,sizeof(struct Block*));
+    new_table.size = sequence.size;
+    for (int i = 0; i < new_table.size; i++){
+        new_table.table[i] = 
+            create_block(sequence.tmp_files[i]);
+    }
+    return new_table;
 }
 
 int operation_count(struct Block block){
@@ -100,33 +112,33 @@ int operation_count(struct Block block){
 }
 
 void remove_block(struct BlockTable* table, int index){
-    struct Block* newTable = 
+    struct Block* new_table = 
         (struct Block*)calloc(--table->size,sizeof(struct Block*));
     int removed = 0;
     for(int i = 0; i< table->size-1;i ++){
         removed = i - removed == index ? 1 : 0;
         if (removed == 0){
-            newTable[i]=table->table[i];
+            new_table[i]=table->table[i];
         } else {
-            newTable[i]=table->table[i+1];
+            new_table[i]=table->table[i+1];
         }
     }
     free((void*)table->table);
-    table->table=newTable;
+    table->table=new_table;
 }
 
 void remove_operation(struct Block* block, int index){
-    char** newOperations = 
+    char** new_operations = 
         (char**)calloc(block->size,sizeof(char**));
     int removed = 0;
     for(int i = 0; i< block->size-1;i ++){
         removed = i - removed == index ? 1 : 0;
         if (removed == 0){
-            newOperations[i]=block->operations[i];
+            new_operations[i]=block->operations[i];
         } else {
-            newOperations[i]=block->operations[i+1];
+            new_operations[i]=block->operations[i+1];
         }
     }
     free((void*)block->operations);
-    block->operations=newOperations;
+    block->operations=new_operations;
 }
