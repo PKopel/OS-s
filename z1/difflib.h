@@ -4,8 +4,8 @@
 #include <stdio.h>
 
 struct Pair{
-    FILE* file_a;
-    FILE* file_b;
+    char* file_a;
+    char* file_b;
 };
 
 struct Sequence{
@@ -33,7 +33,7 @@ struct Sequence define_sequence(char* sequence);
 struct TmpFiles compare(struct Sequence sequence);
 struct Block create_block(FILE* tmp_file);
 int operation_count(struct Block block);
-void remove_block(struct Block* table);
-void remove_operation(struct Block* block);
+void remove_block(struct BlockTable* table,int index);
+void remove_operation(struct Block* block,int index);
 
 #endif 
