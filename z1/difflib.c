@@ -111,34 +111,36 @@ int operation_count(struct Block block){
     return block.size;
 }
 
-void remove_block(struct BlockTable* table, int index){
+struct BlockTable remove_block(struct BlockTable table, int index){
     struct Block* new_table = 
-        (struct Block*)calloc(--table->size,sizeof(struct Block*));
+        (struct Block*)calloc(--table.size,sizeof(struct Block*));
     int removed = 0;
-    for(int i = 0; i< table->size-1;i ++){
+    for(int i = 0; i< table.size-1;i ++){
         removed = i - removed == index ? 1 : 0;
         if (removed == 0){
-            new_table[i]=table->table[i];
+            new_table[i]=table.table[i];
         } else {
-            new_table[i]=table->table[i+1];
+            new_table[i]=table.table[i+1];
         }
     }
-    free((void*)table->table);
-    table->table=new_table;
+    free((void*)table.table);
+    table.table=new_table;
+    return table;
 }
 
-void remove_operation(struct Block* block, int index){
+struct Block remove_operation(struct Block block, int index){
     char** new_operations = 
-        (char**)calloc(block->size,sizeof(char**));
+        (char**)calloc(block.size,sizeof(char**));
     int removed = 0;
-    for(int i = 0; i< block->size-1;i ++){
+    for(int i = 0; i< block.size-1;i ++){
         removed = i - removed == index ? 1 : 0;
         if (removed == 0){
-            new_operations[i]=block->operations[i];
+            new_operations[i]=block.operations[i];
         } else {
-            new_operations[i]=block->operations[i+1];
+            new_operations[i]=block.operations[i+1];
         }
     }
-    free((void*)block->operations);
-    block->operations=new_operations;
+    free((void*)block.operations);
+    block.operations=new_operations;
+    return block;
 }
