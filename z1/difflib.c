@@ -11,22 +11,21 @@ struct Pair create_pair(char* filename_a, char* filename_b){
 }
 
 struct Sequence define_sequence(char* sequence){
-    char* words = strtok(sequence," ");
     int length = strlen(sequence);
-    
     struct Sequence new_sequence;
     new_sequence.size = 0;
-    for (int i = 0; i< length; i ++){
+    for (int i = 0; i < length; i ++){
         if (sequence[i]==':') new_sequence.size++;
     }
     new_sequence.sequence =
         (struct Pair*)calloc(new_sequence.size,sizeof(struct Pair));
     
-    for (int i = 0; words != NULL; i++)
+    char* words = strtok_r(sequence," ",&sequence);
+    for (int i = 0; words != NULL && i < new_sequence.size; i++)
     {
         new_sequence.sequence[i] = 
-            create_pair(strtok(words,":"),strtok(NULL,":"));
-        words = strtok(NULL," ");
+            create_pair(strtok_r(words,":",&words),strtok_r(NULL,":",&words));
+        words = strtok_r(NULL," ",&sequence);
     }   
     return new_sequence;
 }
@@ -67,10 +66,12 @@ struct TmpFiles compare(struct Sequence sequence){
 struct Block create_block(FILE* tmp_file){
     struct Block new_block;
     FILE* start = tmp_file;
-    char current, previous;
+    char current, previous = '\0';
     int line_size = 0, operations = 0;
     while((current = fgetc(tmp_file)) != EOF){
-        if (current <= 57 && current >= 48 && previous == '\n'){
+        if (current <= 57 
+            && current >= 48 
+            && (previous == '\n' || !previous)){
             operations++;
         } else {
             previous = current;
@@ -115,7 +116,7 @@ struct BlockTable remove_block(struct BlockTable table, int index){
     struct Block* new_table = 
         (struct Block*)calloc(--table.size,sizeof(struct Block*));
     int removed = 0;
-    for(int i = 0; i< table.size-1;i ++){
+    for(int i = 0; i< table.size;i ++){
         removed = i - removed == index ? 1 : 0;
         if (removed == 0){
             new_table[i]=table.table[i];
@@ -130,9 +131,9 @@ struct BlockTable remove_block(struct BlockTable table, int index){
 
 struct Block remove_operation(struct Block block, int index){
     char** new_operations = 
-        (char**)calloc(block.size,sizeof(char**));
+        (char**)calloc(--block.size,sizeof(char**));
     int removed = 0;
-    for(int i = 0; i< block.size-1;i ++){
+    for(int i = 0; i< block.size;i ++){
         removed = i - removed == index ? 1 : 0;
         if (removed == 0){
             new_operations[i]=block.operations[i];
