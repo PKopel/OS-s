@@ -5,8 +5,12 @@
 
 struct Pair create_pair(char* filename_a, char* filename_b){
     struct Pair new_pair;
-    new_pair.file_a = filename_a;
-    new_pair.file_b = filename_b;
+    new_pair.file_a = 
+        (char*) calloc(strlen(filename_a), sizeof(char));
+    strcpy(new_pair.file_a, filename_a);
+    new_pair.file_b = 
+        (char*) calloc(strlen(filename_b), sizeof(char));
+    strcpy(new_pair.file_b, filename_b);
     return new_pair;
 }
 
@@ -65,33 +69,38 @@ struct TmpFiles compare(struct Sequence sequence){
 
 struct Block create_block(FILE* tmp_file){
     struct Block new_block;
-    FILE* start = tmp_file;
     char current, previous = '\0';
     int line_size = 0, operations = 0;
     while((current = fgetc(tmp_file)) != EOF){
+        printf("%c",current);
         if (current <= 57 
             && current >= 48 
             && (previous == '\n' || !previous)){
             operations++;
-        } else {
-            previous = current;
         }
+        previous = current;
     }
-    tmp_file = start;
+    fseek(tmp_file,0,0);
     new_block.size = operations;
     new_block.operations = 
-        (char**)calloc(operations,sizeof(char**));
-    int i = 0;
-    while((current = fgetc(tmp_file)) != EOF){
-        if (current <= 57 && current >= 48 && previous == '\n'){
+        (char**)calloc(operations,sizeof(char*));
+    for(int i = 0; i < operations; i++){
+        current = fgetc(tmp_file);
+        //printf("%c",current);
+        if (current == EOF || 
+            (current <= 57 
+            && current >= 48 
+            && previous == '\n')){
             new_block.operations[i] = 
-                (char*)calloc(line_size,sizeof(char*));
-            fread(new_block.operations[i],sizeof(char*),line_size,start);
+                (char*)calloc(line_size,sizeof(char));
+            fseek(tmp_file,-line_size,1);
+            fread(new_block.operations[i],sizeof(char),line_size,tmp_file);
+            //printf("%s\n\n\n",new_block.operations[i]);
             line_size=0;
         } else {
-            previous = current;
             line_size++;
         }
+        previous = current;
     }
     return new_block;  
 }
@@ -99,7 +108,7 @@ struct Block create_block(FILE* tmp_file){
 struct BlockTable create_table(struct TmpFiles sequence){
     struct BlockTable new_table;
     new_table.table = 
-        (struct Block*)calloc(sequence.size,sizeof(struct Block*));
+        (struct Block*)calloc(sequence.size,sizeof(struct Block));
     new_table.size = sequence.size;
     for (int i = 0; i < new_table.size; i++){
         new_table.table[i] = 
@@ -114,7 +123,7 @@ int operation_count(struct Block block){
 
 struct BlockTable remove_block(struct BlockTable table, int index){
     struct Block* new_table = 
-        (struct Block*)calloc(--table.size,sizeof(struct Block*));
+        (struct Block*)calloc(--table.size,sizeof(struct Block));
     int removed = 0;
     for(int i = 0; i< table.size;i ++){
         removed = i - removed == index ? 1 : 0;
@@ -131,7 +140,7 @@ struct BlockTable remove_block(struct BlockTable table, int index){
 
 struct Block remove_operation(struct Block block, int index){
     char** new_operations = 
-        (char**)calloc(--block.size,sizeof(char**));
+        (char**)calloc(--block.size,sizeof(char*));
     int removed = 0;
     for(int i = 0; i< block.size;i ++){
         removed = i - removed == index ? 1 : 0;
