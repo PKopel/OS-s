@@ -72,9 +72,9 @@ struct Block create_block(FILE* tmp_file){
     char current, previous = '\0';
     int line_size = 0, operations = 0;
     while((current = fgetc(tmp_file)) != EOF){
-        printf("%c",current);
-        if (current <= 57 
-            && current >= 48 
+        //printf("%c",current);
+        if (current <= '9' 
+            && current >= '0' 
             && (previous == '\n' || !previous)){
             operations++;
         }
@@ -84,7 +84,7 @@ struct Block create_block(FILE* tmp_file){
     new_block.size = operations;
     new_block.operations = 
         (char**)calloc(operations,sizeof(char*));
-    for(int i = 0; i < operations; i++){
+    /*for(int i = 0; i < operations+1;){
         current = fgetc(tmp_file);
         //printf("%c",current);
         if (current == EOF || 
@@ -94,7 +94,7 @@ struct Block create_block(FILE* tmp_file){
             new_block.operations[i] = 
                 (char*)calloc(line_size,sizeof(char));
             fseek(tmp_file,-line_size,1);
-            fread(new_block.operations[i],sizeof(char),line_size,tmp_file);
+            fread(new_block.operations[i++],sizeof(char),line_size,tmp_file);
             //printf("%s\n\n\n",new_block.operations[i]);
             line_size=0;
         } else {
@@ -102,6 +102,32 @@ struct Block create_block(FILE* tmp_file){
         }
         previous = current;
     }
+*/
+
+
+    int* line_sizes = 
+        (int*)calloc(operations,sizeof(int));
+    for(int i = 0; i < operations+1;){
+        current = fgetc(tmp_file);
+        if (current == EOF || 
+            (current <= '9' 
+            && current >= '0'
+            && previous == '\n'))
+        {
+            line_sizes[i++] = line_size;
+            line_size=0;
+        }
+        line_size++;
+        previous = current;
+    }
+    fseek(tmp_file,0,0);
+    for(int i = 0; i < operations; i++){
+        new_block.operations[i] = 
+            (char*)calloc(line_sizes[i],sizeof(char));
+        fread(new_block.operations[i],sizeof(char),line_sizes[i],tmp_file);
+        printf("%s\n\n\n",new_block.operations[i]); 
+    }
+    free((void*)line_sizes);
     return new_block;  
 }
 
@@ -145,9 +171,9 @@ struct Block remove_operation(struct Block block, int index){
     for(int i = 0; i< block.size;i ++){
         removed = i - removed == index ? 1 : 0;
         if (removed == 0){
-            new_operations[i]=block.operations[i];
+            strcpy(new_operations[i],block.operations[i]);
         } else {
-            new_operations[i]=block.operations[i+1];
+            strcpy(new_operations[i],block.operations[i+1]);
         }
     }
     free((void*)block.operations);

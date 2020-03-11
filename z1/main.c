@@ -9,7 +9,7 @@ void test(struct BlockTable table){
     {
         printf("%d\n\n",operation_count(table.table[i]));
         for(int j = 0; j< table.table[i].size;j++){
-            //printf("%s\n",table.table[i].operations[j]);
+            printf("%s\n",table.table[i].operations[j]);
         }
     }
     printf("\n");
