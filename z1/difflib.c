@@ -18,15 +18,17 @@ struct Sequence define_sequence(char* sequence){
     int length = strlen(sequence);
     struct Sequence new_sequence;
     new_sequence.size = 0;
+    //count number of pairs in sequence
     for (int i = 0; i < length; i ++){
         if (sequence[i]==':') new_sequence.size++;
     }
     new_sequence.sequence =
         (struct Pair*)calloc(new_sequence.size,sizeof(struct Pair));
-    
+    //split sequence to pairs "file_a:file_b"
     char* words = strtok_r(sequence," ",&sequence);
     for (int i = 0; words != NULL && i < new_sequence.size; i++)
     {
+        //get filenames from pairs "file_a:file_b"
         new_sequence.sequence[i] = 
             create_pair(strtok_r(words,":",&words),strtok_r(NULL,":",&words));
         words = strtok_r(NULL," ",&sequence);
@@ -61,8 +63,8 @@ struct TmpFiles compare(struct Sequence sequence){
         (FILE**)calloc(sequence.size,sizeof(FILE*));
     files.size = sequence.size;
     for( int i = 0; i< sequence.size;i++){
-        files.tmp_files[i] = compare_pair(
-            sequence.sequence[i]);
+        files.tmp_files[i] = 
+            compare_pair(sequence.sequence[i]);
     }
     return files;
 }
@@ -71,8 +73,8 @@ struct Block create_block(FILE* tmp_file){
     struct Block new_block;
     char current, previous = '\0';
     int line_size = 0, operations = 0;
-    while((current = fgetc(tmp_file)) != EOF){
-        //printf("%c",current);
+    //count operations
+    while((current = fgetc(tmp_file)) != EOF){;
         if (current <= '9' 
             && current >= '0' 
             && (previous == '\n' || !previous)){
@@ -80,34 +82,17 @@ struct Block create_block(FILE* tmp_file){
         }
         previous = current;
     }
+    //reset pointer and previous
     fseek(tmp_file,0,0);
+    previous = '\0';
     new_block.size = operations;
     new_block.operations = 
         (char**)calloc(operations,sizeof(char*));
-    /*for(int i = 0; i < operations+1;){
-        current = fgetc(tmp_file);
-        //printf("%c",current);
-        if (current == EOF || 
-            (current <= 57 
-            && current >= 48 
-            && previous == '\n')){
-            new_block.operations[i] = 
-                (char*)calloc(line_size,sizeof(char));
-            fseek(tmp_file,-line_size,1);
-            fread(new_block.operations[i++],sizeof(char),line_size,tmp_file);
-            //printf("%s\n\n\n",new_block.operations[i]);
-            line_size=0;
-        } else {
-            line_size++;
-        }
-        previous = current;
-    }
-*/
-
-
+    //aditional array for sizes of operations
     int* line_sizes = 
         (int*)calloc(operations,sizeof(int));
-    for(int i = 0; i < operations+1;){
+    //count sizes of operations
+    for(int i = 0; i < operations; previous = current){
         current = fgetc(tmp_file);
         if (current == EOF || 
             (current <= '9' 
@@ -118,14 +103,14 @@ struct Block create_block(FILE* tmp_file){
             line_size=0;
         }
         line_size++;
-        previous = current;
     }
+    //reset pointer again
     fseek(tmp_file,0,0);
+    //copy operations from file to block
     for(int i = 0; i < operations; i++){
         new_block.operations[i] = 
             (char*)calloc(line_sizes[i],sizeof(char));
         fread(new_block.operations[i],sizeof(char),line_sizes[i],tmp_file);
-        printf("%s\n\n\n",new_block.operations[i]); 
     }
     free((void*)line_sizes);
     return new_block;  
@@ -150,14 +135,10 @@ int operation_count(struct Block block){
 struct BlockTable remove_block(struct BlockTable table, int index){
     struct Block* new_table = 
         (struct Block*)calloc(--table.size,sizeof(struct Block));
-    int removed = 0;
     for(int i = 0; i< table.size;i ++){
-        removed = i - removed == index ? 1 : 0;
-        if (removed == 0){
-            new_table[i]=table.table[i];
-        } else {
-            new_table[i]=table.table[i+1];
-        }
+        //if i >= index, then one item should be omitted
+        new_table[i] = 
+            table.table[i >= index ? i + 1 : i];
     }
     free((void*)table.table);
     table.table=new_table;
@@ -167,15 +148,16 @@ struct BlockTable remove_block(struct BlockTable table, int index){
 struct Block remove_operation(struct Block block, int index){
     char** new_operations = 
         (char**)calloc(--block.size,sizeof(char*));
-    int removed = 0;
+    int id;
     for(int i = 0; i< block.size;i ++){
-        removed = i - removed == index ? 1 : 0;
-        if (removed == 0){
-            strcpy(new_operations[i],block.operations[i]);
-        } else {
-            strcpy(new_operations[i],block.operations[i+1]);
-        }
+        //if i >= index, then one item should be omitted
+        id = i >= index ? i + 1 : i;
+        new_operations[i] = 
+            (char*)calloc(strlen(block.operations[id]),sizeof(char));
+        strcpy(new_operations[i],block.operations[id]);
+        free((void*)block.operations[i]);
     }
+    free((void*)block.operations[block.size]);
     free((void*)block.operations);
     block.operations=new_operations;
     return block;

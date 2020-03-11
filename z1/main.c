@@ -4,10 +4,10 @@
 #include <string.h>
 
 void test(struct BlockTable table){
-    printf("%d\n\n",table.size);
+    printf("number of blocks:%d\n\n",table.size);
     for (int i = 0; i < table.size; i++)
     {
-        printf("%d\n\n",operation_count(table.table[i]));
+        printf("number of operations:%d\n\n",operation_count(table.table[i]));
         for(int j = 0; j< table.table[i].size;j++){
             printf("%s\n",table.table[i].operations[j]);
         }
