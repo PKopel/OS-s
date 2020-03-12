@@ -1,6 +1,7 @@
 #include "difflib.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 
 struct Pair create_pair(char* filename_a, char* filename_b){
@@ -69,8 +70,13 @@ struct TmpFiles compare(struct Sequence sequence){
     return files;
 }
 
-struct Block create_block(FILE* tmp_file){
-    struct Block new_block;
+int size(char** block){
+    int size = 0;
+    while(block[size]!=NULL) size++;
+    return size;
+}
+
+char** create_block_hidden(FILE* tmp_file){
     char current, previous = '\0';
     int line_size = 0, operations = 0;
     //count operations
@@ -85,9 +91,8 @@ struct Block create_block(FILE* tmp_file){
     //reset pointer and previous
     fseek(tmp_file,0,0);
     previous = '\0';
-    new_block.size = operations;
-    new_block.operations = 
-        (char**)calloc(operations,sizeof(char*));
+    char** new_block = 
+        (char**)calloc(operations+1,sizeof(char*));
     //aditional array for sizes of operations
     int* line_sizes = 
         (int*)calloc(operations,sizeof(int));
@@ -108,57 +113,54 @@ struct Block create_block(FILE* tmp_file){
     fseek(tmp_file,0,0);
     //copy operations from file to block
     for(int i = 0; i < operations; i++){
-        new_block.operations[i] = 
+        new_block[i] = 
             (char*)calloc(line_sizes[i],sizeof(char));
-        fread(new_block.operations[i],sizeof(char),line_sizes[i],tmp_file);
+        fread(new_block[i],sizeof(char),line_sizes[i],tmp_file);
     }
     free((void*)line_sizes);
+    new_block[operations]=NULL;
     return new_block;  
 }
 
-struct BlockTable create_table(struct TmpFiles sequence){
-    struct BlockTable new_table;
-    new_table.table = 
-        (struct Block*)calloc(sequence.size,sizeof(struct Block));
-    new_table.size = sequence.size;
-    for (int i = 0; i < new_table.size; i++){
-        new_table.table[i] = 
-            create_block(sequence.tmp_files[i]);
+int create_block(struct BlockArray* array, FILE* tmp_file){
+    if (array->full == array->size) {
+        array->array = 
+            (char***)realloc((void*)array->array
+                        ,(++array->full)*sizeof(char**));
     }
-    return new_table;
+    array->array[array->size] = create_block_hidden(tmp_file);
+    return array->size++;
 }
 
-int operation_count(struct Block block){
-    return block.size;
+struct BlockArray create_array(int size){
+    struct BlockArray new_array;
+    new_array.array = 
+        (char***)calloc(size,sizeof(char**));
+    new_array.size = 0;
+    new_array.full = size;
+    return new_array;
 }
 
-struct BlockTable remove_block(struct BlockTable table, int index){
-    struct Block* new_table = 
-        (struct Block*)calloc(--table.size,sizeof(struct Block));
-    for(int i = 0; i< table.size;i ++){
+int operation_count(char** block){
+    return size(block);
+}
+
+void remove_block(struct BlockArray* array, int index){
+    array->size--;
+    for(int i = 0; i< array->size;i ++){
         //if i >= index, then one item should be omitted
-        new_table[i] = 
-            table.table[i >= index ? i + 1 : i];
+        array->array[i] = 
+            array->array[i >= index ? i + 1 : i];
     }
-    free((void*)table.table);
-    table.table=new_table;
-    return table;
 }
 
-struct Block remove_operation(struct Block block, int index){
-    char** new_operations = 
-        (char**)calloc(--block.size,sizeof(char*));
-    int id;
-    for(int i = 0; i< block.size;i ++){
-        //if i >= index, then one item should be omitted
-        id = i >= index ? i + 1 : i;
-        new_operations[i] = 
-            (char*)calloc(strlen(block.operations[id]),sizeof(char));
-        strcpy(new_operations[i],block.operations[id]);
-        free((void*)block.operations[i]);
+void remove_operation(char** block, int index){
+    int bsize = size(block);
+    for(int i = 0; i< bsize;i ++){
+        //if i >= index, then one item should be omitted,
+        // last one (block[bsize]) is NULL
+        block[i] = block[i >= index ? i + 1 : i];
     }
-    free((void*)block.operations[block.size]);
-    free((void*)block.operations);
-    block.operations=new_operations;
-    return block;
+    block=
+        (char**)realloc((void*)block,bsize*sizeof(char*));
 }
