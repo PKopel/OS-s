@@ -4,13 +4,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-struct Pair{
-    char* file_a;
-    char* file_b;
-};
-
 struct Sequence{
-    struct Pair* sequence;
+    char*** sequence;
     int size;
 };
 

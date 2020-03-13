@@ -4,15 +4,16 @@
 #include <stdbool.h>
 
 
-struct Pair create_pair(char* filename_a, char* filename_b){
-    struct Pair new_pair;
-    new_pair.file_a = 
+char** create_pair(char* filename_a, char* filename_b){
+    char** pair = 
+        (char**)calloc(2,sizeof(char*));
+    pair[0] = 
         (char*) calloc(strlen(filename_a), sizeof(char));
-    strcpy(new_pair.file_a, filename_a);
-    new_pair.file_b = 
+    strcpy(pair[0], filename_a);
+    pair[1] = 
         (char*) calloc(strlen(filename_b), sizeof(char));
-    strcpy(new_pair.file_b, filename_b);
-    return new_pair;
+    strcpy(pair[1], filename_b);
+    return pair;
 }
 
 struct Sequence define_sequence(char* sequence){
@@ -24,7 +25,7 @@ struct Sequence define_sequence(char* sequence){
         if (sequence[i]==':') new_sequence.size++;
     }
     new_sequence.sequence =
-        (struct Pair*)calloc(new_sequence.size,sizeof(struct Pair));
+        (char***)calloc(new_sequence.size,sizeof(char**));
     //split sequence to pairs "file_a:file_b"
     char* words = strtok_r(sequence," ",&sequence);
     for (int i = 0; words != NULL && i < new_sequence.size; i++)
@@ -37,21 +38,21 @@ struct Sequence define_sequence(char* sequence){
     return new_sequence;
 }
 
-FILE* compare_pair(struct Pair pair){
-    int len_a = strlen(pair.file_a);
-    int len_b = strlen(pair.file_b);
+FILE* compare_pair(char** pair){
+    int len_a = strlen(pair[0]);
+    int len_b = strlen(pair[1]);
     //command is "diff <file_a> <file_b> > tmp_<file_a><file_b>"
     char* command = (char*)calloc(2* (len_a + len_b+8),sizeof(char));
     char* tmp_file = (char*)calloc(4 + len_a + len_b,sizeof(char));
     //create name for tmp file
     strcpy(tmp_file,"tmp_");
-    strcat(tmp_file,pair.file_a);
-    strcat(tmp_file,pair.file_b);
+    strcat(tmp_file,pair[0]);
+    strcat(tmp_file,pair[1]);
     //create command
     strcpy(command,"diff ");
-    strcat(command,pair.file_a);
+    strcat(command,pair[0]);
     strcat(command," ");
-    strcat(command,pair.file_b);
+    strcat(command,pair[1]);
     strcat(command," > ");
     strcat(command,tmp_file);
     system(command);
