@@ -100,36 +100,12 @@ void run(char* string,char* desc){
     free((void*)array.array);
 }
 
-char* read_line(FILE* file){
-    int length = 1;
-    char current = fgetc(file);
-    while( current != '\n' && current != EOF){
-        length++;
-        current = fgetc(file);
-    }
-    fseek(file,-length+1,1);
-    char* line = 
-            (char*)calloc(length,sizeof(char));
-    fread(line,sizeof(char),length,file);
-    return line;
-}
-
 int main(void){
 
     #ifdef DYNAMIC
     init_dynamic();
     #endif
 
-    FILE* sequences = fopen("sequences.txt","r");
-    char* line = read_line(sequences);
-    while (strlen)
-    {
-        run(strtok_r(line," ",&line),strtok_r(line," ",&line));
-        line = read_line(sequences);
-    }
-    fclose(sequences);
-    free((void*)line);
-   /*
     char small[] = "a.txt:b.txt c.txt:d.txt a.txt:c.txt b.txt:d.txt ";
     char medium[] = "a.txt:b.txt c.txt:d.txt e.txt:f.txt a.txt:c.txt b.txt:d.txt c.txt:e.txt d.txt:f.txt a.txt:e.txt b.txt:f.txt";
     char big[] = "a.txt:b.txt a.txt:c.txt a.txt:d.txt a.txt:e.txt a.txt:f.txt b.txt:a.txt b.txt:c.txt b.txt:d.txt b.txt:e.txt b.txt:f.txt c.txt:a.txt c.txt:b.txt c.txt:d.txt c.txt:e.txt c.txt:f.txt d.txt:a.txt d.txt:b.txt d.txt:c.txt d.txt:e.txt d.txt:f.txt e.txt:a.txt e.txt:f.txt";
@@ -142,5 +118,4 @@ int main(void){
     run(very_similar,"małe różnice");
     run(a_bit_similar,"średnie różnice");
     run(not_similar,"duże różnice");
-    */
 }

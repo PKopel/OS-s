@@ -1,7 +1,7 @@
 CC = gcc -Wall
 SRC_PATH = ../zad2
 LIB_PATH = ../zad1
-OPT = 0
+OPT = O
 
 static:clean
 	$(CC) -c $(LIB_PATH)/difflib.c -o difflib.o
@@ -19,43 +19,37 @@ clean:
 test_static:static
 	$(CC) $(SRC_PATH)/main.c -o main.o -L. -ldifflib -$(OPT)
 	./main.o
+	cat raport.txt >> results3b.txt
 
 test_shared:shared
 	$(CC) $(SRC_PATH)/main.c -o main.o -L. -Wl,-rpath=. -ldifflib -$(OPT)
 	./main.o
+	cat raport.txt >> results3b.txt
 
 test_dynamic:shared
 	$(CC) $(SRC_PATH)/main.c -o main.o -ldl -D DYNAMIC -$(OPT)
 	./main.o
+	cat raport.txt >> results3b.txt
 
 test_all:
-	echo "static\n" >> raport.txt
-	make test_static OPT = 0
-	echo "shared\n" >> raport.txt
-	make test_shared OPT = 0
-	echo "dynamic\n >> raport.txt
-	make test_dynamic OPT = 0
-	cat raport.txt >> results3b.txt 
+	echo "static\n" >> results3b.txt
+	make test_static OPT=O
+	echo "shared\n" >> results3b.txt
+	make test_shared OPT=O
 	make clean
 
 test_all_02:
-	echo "static 02\n" >> raport.txt
-	make test_static OPT = 02
-	echo "shared 02\n" >> raport.txt
-	make test_shared OPT = 02
-	echo "dynamic 02\n >> raport.txt
-	make test_dynamic OPT = 02
-	cat raport.txt >> results3b.txt  
+	echo "static O2\n" >> results3b.txt
+	make test_static OPT=O2
+	echo "shared O2\n" >> results3b.txt
+	make test_shared OPT=O2
 	make clean
 
 test_all_0s:
-	echo "static 0s\n" >> raport.txt
-	make test_static OPT = 0s
-	echo "shared 0s\n" >> raport.txt
-	make test_shared OPT = 0s
-	echo "dynamic 0s\n >> raport.txt
-	make test_dynamic OPT = 0s
-	cat raport.txt >> results3b.txt 
+	echo "static Os\n" >> results3b.txt
+	make test_static OPT=Os
+	echo "shared Os\n" >> results3b.txt
+	make test_shared OPT=Os
 	make clean
 
 test_all_all:

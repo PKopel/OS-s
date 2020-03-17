@@ -17,24 +17,19 @@ clean:
 
 test_static:static
 	$(CC) $(SRC_PATH)/main.c -o main.o -L. -ldifflib
+	echo static > raport.txt
 	./main.o
-	cat raport.txt >> results3a.txt
+	cat raport.txt >> raport2.txt
+	make clean
 
 test_shared:shared
 	$(CC) $(SRC_PATH)/main.c -o main.o -L. -Wl,-rpath=. -ldifflib
+	echo shared >> raport.txt
 	./main.o
-	cat raport.txt >> results3a.txt
-
-test_dynamic:shared
-	$(CC) $(SRC_PATH)/main.c -o main.o -ldl -D DYNAMIC
-	./main.o
-	cat raport.txt >> results3a.txt
+	cat raport.txt >> raport2.txt
+	make clean
 
 test_all:
-	echo "static\n" >> raport.txt
 	make test_static
-	echo "shared\n" >> raport.txt
 	make test_shared
-	cat raport.txt >> results3a.txt
 	make clean 
-
