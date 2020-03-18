@@ -1,5 +1,6 @@
 {
     "files.associations": {
         "sysprog.h": "c"
-    }
+    },
+    "C_Cpp.errorSquiggles": "Enabled"
 }

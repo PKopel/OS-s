@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int sort_lib(char* filename, int length, int size);
 int copy_lib(char* file1, char*file2, int length, int size);
