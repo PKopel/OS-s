@@ -15,7 +15,7 @@ int main(int argc, char** argv){
     if(argc == 5){
         if((length = atoi(argv[3])) > 0 
         && (size = atoi(argv[4])) > 0)
-        return copy_lib("/dev/urandom",argv[2],length,size);
+        return copy_("/dev/urandom",argv[2],length,size);
         else return error("wrong length or size, should be positive int");
     } 
     //check if command is sort

@@ -1,4 +1,10 @@
 CC = gcc -Wall
+LENGTH = 100
+BLOCK = 512
+MODE = lib
+FILE = test.txt
+RESULT = result.txt
+BACKUP = backup.txt
 
 sys:clean
 	$(CC) -c sysprog.c -o sysprog.o 
@@ -11,23 +17,23 @@ lib:clean
 clean:
 	rm -f *.o
 	rm -f *.a
+	rm -f tmp_$(FILE)
+	rm -f $(RESULT)
+	rm -f $(BACKUP)
 	
 prog:sys lib
 	$(CC) program.c -o program.o -L. -llibprog -lsysprog
 
-gen_test:prog
-	./program.o generate test.txt 100 512
+test_gen:prog
+	./program.o generate $(FILE) $(LENGTH) $(BLOCK)
 
-cpy_sys_test:prog
-	./program.o copy test.txt test_sys.txt 100 512 sys
+test_cpy:prog
+	./program.o copy $(FILE) $(RESULT) $(LENGTH) $(BLOCK) $(MODE)
 
-cpy_lib_test:prog
-	./program.o copy test.txt test_lib.txt 100 512 lib
+test_srt:prog
+	cat $(FILE) > $(BACKUP)
+	./program.o sort $(FILE) $(LENGTH) $(BLOCK) $(MODE)
 
-srt_sys_test:prog
-	cat test.txt > test_o.txt
-	./program.o sort test.txt 100 512 sys
-
-srt_lib_test:prog
-	cat test.txt > test_o.txt
-	./program.o sort test.txt 100 512 lib
+reset_test:
+	cat $(BACKUP) > $(FILE)
+	rm -f tmp_$(FILE)
