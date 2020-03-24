@@ -84,7 +84,7 @@ int search(char* starting_point,int level){
         (struct stat*)calloc(1,sizeof(struct stat));
     char* next_point = 
         (char*)calloc(100,sizeof(char)),
-        abs_path = 
+        *abs_path = 
         (char*)calloc(100,sizeof(char));
     int result;
     while(dir != NULL){
