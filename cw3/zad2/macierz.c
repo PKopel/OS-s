@@ -4,17 +4,36 @@
 #include <sys/wait.h>
 #include <sys/file.h>
 
-int multiply(FILE* A, FILE* B,int col_a,int row_a,int col_b_start,int col_db_end, FILE* C){
-    int a,b,sum = 0;
-    for(int i=0;i<col_b;i++){
+int multiply(FILE* A, FILE* B,int col_a,int row_a,int col_b,int col_start,int col_end, FILE* C){
+    int current, a, b, sum = 0;
+
+    char* format = 
+		(char*)calloc(col_b*4-1,sizeof(char)),
+		previous,swap;
+	for(int i = 0; i < col_b; i++)
+		if(i == col_start){
+			strcat(format,"%d ");
+			current = 1+i*4;
+		} else strcat(format,"%*d ");
+	format[col_b*4-2] = '\0';
+
+    for(int i=col_start;i<col_end;i++){
         for(int j = 0; j<row_a;j++){
             for(int k = 0; k< col_a;k++){
                 fscanf(A,"%d ",&a);
-                fscanf(B,"%d ",&b);
+                fscanf(B,format,&b);
                 sum+= a*b;
-                
             }
             fprintf(C,"%d ",sum);
+            format[current++]='*';
+            previous = 'd';
+            while(current < col_b*4-1 && format[current]!='d'){
+                swap = format[current];
+                format[current]=previous;
+                previous = swap;
+                current++;
+            }	
+            fseek(B,0,0);
         }
     }
     return 0;
