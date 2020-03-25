@@ -4,20 +4,57 @@
 #include <sys/wait.h>
 #include <sys/file.h>
 
-int multiply(FILE* A, FILE* B,int col_a,int row_a,int col_b_start,int col_db_end, FILE* C){
+struct matrix{
+    int cols;
+    int rows;
+    int **matrix;
+};
+
+int multiply(struct matrix A, struct matrix B, int start, int end,FILE* result){
     int a,b,sum = 0;
-    for(int i=0;i<col_b;i++){
-        for(int j = 0; j<row_a;j++){
-            for(int k = 0; k< col_a;k++){
-                fscanf(A,"%d ",&a);
-                fscanf(B,"%d ",&b);
-                sum+= a*b;
-                
+    for(int i = 0; i < A.rows; i++){
+        for(int j = start; j < end; j++){
+            for(int k = 0; k < A.cols; k++){
+                sum+= A.matrix[i][k]*B.matrix[k][j];
+            fprintf(result,"%d ",sum);
+            sum = 0;
             }
-            fprintf(C,"%d ",sum);
         }
     }
     return 0;
+}
+
+struct matrix read_matrix(FILE* file){
+    struct matrix new_matrix;
+    fscanf(file,"%d %d",&new_matrix.cols,&new_matrix.rows);
+    new_matrix.matrix = 
+        (int**)calloc(new_matrix.cols,sizeof(int*));
+    for(int i = 0; i < new_matrix.cols; i++){
+        for(int j = 0; j< new_matrix.rows; j++){
+            fscanf(file,"%d",)
+        }
+    }
+    return new_matrix;
+}
+
+int run_processes(char* list,int workers_max,int time_max,int write_type){
+    pid_t child_pid;
+    for (int i =0; i< workers_max; i++){
+        child_pid = fork();
+
+    }
+}
+
+int main(int argc, char** argv){
+    if (argc != 5) return 22;
+    char* list = argv[1];
+    int workers_max = atoi(argv[2]);
+    int time_max = atoi(argv[3]);
+    int write_type;
+    if(strcmp(argv[4],"common") == 0) write_type = 0;
+    else if (strcmp(argv[4],"separate") == 0) write_type = 1;
+    else return 22;
+    return run_processes(list,workers_max,time_max,write_type);
 }
 /*
 startuje timer;
@@ -32,7 +69,7 @@ nie: zaczynam mnożyć fragment b od kolumny
     (mój numer - ilość bloków które pominąłem)*ilość kolumn b / ilość wszystkich procesów 
     do (mój numer - ilość bloków które pominąłem + 1)*ilość kolumn b / ilość wszystkich procesów
 
-*/
+
 
 int proces(char* list, int workers_num, int time_max, int write_type){
     FILE* list_file = fopen(list,"r");
@@ -74,23 +111,4 @@ int proces(char* list, int workers_num, int time_max, int write_type){
     }
     fclose(msg);
 }
-
-int run_processes(char* list,int workers_max,int time_max,int write_type){
-    pid_t child_pid;
-    for (int i =0; i< workers_max; i++){
-        child_pid = fork();
-
-    }
-}
-
-int main(int argc, char** argv){
-    if (argc != 5) return 22;
-    char* list = argv[1];
-    int workers_max = atoi(argv[2]);
-    int time_max = atoi(argv[3]);
-    int write_type;
-    if(strcmp(argv[4],"common") == 0) write_type = 0;
-    else if (strcmp(argv[4],"separate") == 0) write_type = 1;
-    else return 22;
-    return run_processes(list,workers_max,time_max,write_type);
-}
+*/
