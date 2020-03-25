@@ -6,7 +6,8 @@
 
 int multiply(FILE* A, FILE* B,int col_a,int row_a,int col_b,int col_start,int col_end, FILE* C){
     int current, a, b, sum = 0;
-
+    int **tmp = 
+        (int**)calloc(col_end - col_start,sizeof(int*));
     char* format = 
 		(char*)calloc(col_b*4-1,sizeof(char)),
 		previous,swap;
@@ -18,13 +19,15 @@ int multiply(FILE* A, FILE* B,int col_a,int row_a,int col_b,int col_start,int co
 	format[col_b*4-2] = '\0';
 
     for(int i=col_start;i<col_end;i++){
+        tmp[i] = 
+            (int*)calloc(row_a,sizeof(int));
         for(int j = 0; j<row_a;j++){
             for(int k = 0; k< col_a;k++){
                 fscanf(A,"%d ",&a);
                 fscanf(B,format,&b);
                 sum+= a*b;
             }
-            fprintf(C,"%d ",sum);
+            tmp[i][j] = sum;
             format[current++]='*';
             previous = 'd';
             while(current < col_b*4-1 && format[current]!='d'){
@@ -36,6 +39,8 @@ int multiply(FILE* A, FILE* B,int col_a,int row_a,int col_b,int col_start,int co
             fseek(B,0,0);
         }
     }
+
+    for(int )
     return 0;
 }
 /*
