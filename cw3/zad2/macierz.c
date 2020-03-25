@@ -15,7 +15,7 @@ int multiply(struct matrix A, struct matrix B, int start, int end,FILE* result){
     for(int i = 0; i < A.rows; i++){
         for(int j = start; j < end; j++){
             for(int k = 0; k < A.cols; k++){
-                sum+= A.matrix[i][k]*B.matrix[k][j];
+                sum+= A.matrix[k][i]*B.matrix[j][k];
             fprintf(result,"%d ",sum);
             sum = 0;
             }
@@ -26,35 +26,17 @@ int multiply(struct matrix A, struct matrix B, int start, int end,FILE* result){
 
 struct matrix read_matrix(FILE* file){
     struct matrix new_matrix;
-    fscanf(file,"%d %d",&new_matrix.cols,&new_matrix.rows);
+    fscanf(file,"%d %d",&(new_matrix.cols),&(new_matrix.rows));
     new_matrix.matrix = 
         (int**)calloc(new_matrix.cols,sizeof(int*));
     for(int i = 0; i < new_matrix.cols; i++){
+        new_matrix.matrix[i] = 
+            (int*)calloc(new_matrix.rows,sizeof(int)); 
         for(int j = 0; j< new_matrix.rows; j++){
-            fscanf(file,"%d",)
+            fscanf(file,"%d",&(new_matrix.matrix[i][j]));
         }
     }
     return new_matrix;
-}
-
-int run_processes(char* list,int workers_max,int time_max,int write_type){
-    pid_t child_pid;
-    for (int i =0; i< workers_max; i++){
-        child_pid = fork();
-
-    }
-}
-
-int main(int argc, char** argv){
-    if (argc != 5) return 22;
-    char* list = argv[1];
-    int workers_max = atoi(argv[2]);
-    int time_max = atoi(argv[3]);
-    int write_type;
-    if(strcmp(argv[4],"common") == 0) write_type = 0;
-    else if (strcmp(argv[4],"separate") == 0) write_type = 1;
-    else return 22;
-    return run_processes(list,workers_max,time_max,write_type);
 }
 /*
 startuje timer;
@@ -68,7 +50,7 @@ tak: sprawdzam czy mój numer jest większy od ilości kolumn b
 nie: zaczynam mnożyć fragment b od kolumny 
     (mój numer - ilość bloków które pominąłem)*ilość kolumn b / ilość wszystkich procesów 
     do (mój numer - ilość bloków które pominąłem + 1)*ilość kolumn b / ilość wszystkich procesów
-
+*/
 
 
 int proces(char* list, int workers_num, int time_max, int write_type){
@@ -91,8 +73,8 @@ int proces(char* list, int workers_num, int time_max, int write_type){
     } while (i<current_line && getc(list_file) != EOF);
     if(getc(list_file) != EOF){
         FILE *A = fopen(file_a,"r"),
-            *B = fopen(file_b,"r"),
-            *C;
+             *B = fopen(file_b,"r"),
+             *C;
         if(write_type){
             char* tmp_file = (char*)calloc(strlen(file_c)+7,sizeof(char));
             sprintf(tmp_file,"%s_%d_%d",file_c,col_start,col_end);
@@ -106,9 +88,28 @@ int proces(char* list, int workers_num, int time_max, int write_type){
         fprintf(msg,"%d %d",current_line,col_new_start);
         fseek(msg,0,0);
         flock(msg_d,LOCK_UN);
-        multiply(A,B,col_a,row_a,col_start,col_end,C);
+        multiply(A,,col_start,col_end,C);
         }
     }
     fclose(msg);
 }
-*/
+
+int run_processes(char* list,int workers_max,int time_max,int write_type){
+    pid_t child_pid;
+    for (int i =0; i< workers_max; i++){
+        child_pid = fork();
+
+    }
+}
+
+int main(int argc, char** argv){
+    if (argc != 5) return 22;
+    char* list = argv[1];
+    int workers_max = atoi(argv[2]);
+    int time_max = atoi(argv[3]);
+    int write_type;
+    if(strcmp(argv[4],"common") == 0) write_type = 0;
+    else if (strcmp(argv[4],"separate") == 0) write_type = 1;
+    else return 22;
+    return run_processes(list,workers_max,time_max,write_type);
+}
