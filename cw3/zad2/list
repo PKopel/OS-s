@@ -1,1 +1,3 @@
-inA inB out
+inA inB outAB
+inC inA outCA
+inB inC outBC
