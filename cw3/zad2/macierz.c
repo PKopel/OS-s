@@ -33,8 +33,14 @@ struct matrix multiply(struct matrix A, struct matrix B, int start, int end){
     return result;
 }
 
-struct matrix read_matrix(char* file_name){
-    FILE* file = fopen(file_name,"r");
+void free_matrix(struct matrix M){
+    for(int i = 0; i < M.rows; i++){
+        free((void*)M.matrix[i]);
+    }
+    free((void*)M.matrix);    
+}
+
+struct matrix read_matrix(FILE* file){
     struct matrix new_matrix;
     new_matrix.cols = 0;
     new_matrix.rows = 0;
@@ -60,19 +66,40 @@ struct matrix read_matrix(char* file_name){
             fscanf(file,"%d",&(new_matrix.matrix[i][j]));
         }
     }
-    fclose(file);
     return new_matrix;
 }
 
-void write_matrix(char* file_name, struct matrix M){
-    FILE* file = fopen(file_name,"w");
+void write_matrix(FILE* file, struct matrix M){
     for(int i = 0; i< M.rows;i++){
         for(int j = 0; j< M.cols;j++){
             fprintf(file,"%d\t",M.matrix[j][i]);
         }
         fprintf(file,"\n");
     }
-    fclose(file);
+}
+
+void rewrite_matrix(FILE* file, struct matrix M, int col_start, int col_end){
+    struct matrix current;
+    if(fgetc(file) != EOF){
+        current = read_matrix(file);
+    } else {
+        current.matrix = 
+        (int**)calloc(M.rows,sizeof(int*));
+        for(int i = 0; i < M.rows; i++){
+            current.matrix[i] = 
+                (int*)calloc(col_end,sizeof(int)); 
+            for(int j = 0; j< col_end; j++){
+                current.matrix[i][j] = 0;
+            }
+        }
+    }
+    for(int i = 0; i < M.rows; i++){
+        for(int j = col_start; j< col_start + M.cols; j++){
+            current.matrix[i][j] = M.matrix[i][j];
+        }
+    }
+    write_matrix(file,current);
+    free_matrix(current);
 }
 /*
 startuje timer;
@@ -102,6 +129,8 @@ int proces(char* list, int workers_num, int max_time, int write_type){
         (char*)calloc(FILENAME_MAX,sizeof(char)),
         *file_c = 
         (char*)calloc(FILENAME_MAX,sizeof(char)),
+        *file_tmp = 
+        (char*)calloc(FILENAME_MAX,sizeof(char)),
         *msg_line = 
         (char*)calloc(10,sizeof(char));
     int col_start, col_end, col_new_start, current_line, i=0; 
@@ -113,13 +142,16 @@ int proces(char* list, int workers_num, int max_time, int write_type){
         fseek(msg,0,0);
         if(current_line >= 0){
             fprintf(log,"before %d %d %d\n",getpid(), current_line,col_new_start);
+            fflush(log);
             do{
                 fscanf(list_file,"%s %s %s",file_a,file_b,file_c);
                 i++;
             } while (i<current_line && getc(list_file) != EOF);
             i = current_line;
-            A = read_matrix(file_a);
-            B = read_matrix(file_b);
+            FILE* a = fopen(file_a,"r");
+            FILE* b = fopen(file_b,"r");
+            A = read_matrix(a);
+            B = read_matrix(b);
             if (B.cols < workers_num) col_end = col_start + 1;
             else col_end = col_start + B.cols/workers_num;
             col_new_start = col_end < B.cols ? col_end : 0;
@@ -127,15 +159,36 @@ int proces(char* list, int workers_num, int max_time, int write_type){
             if(fgetc(list_file) == EOF 
             && col_new_start == 0) current_line = -1;
             fprintf(msg,"%d\t%d",current_line,col_new_start);
+            fflush(msg);
             fprintf(log,"after %d %d %d\n",getpid(), current_line,col_new_start);
+            fflush(log);
             fseek(msg,0,0);
             flock(msg_d,LOCK_UN);
             C = multiply(A,B,col_start,col_end);
-            write_matrix(file_c,C);
+            if(write_type){
+                int file_no = 9;
+                if (col_start > 9) while (file_no < col_start) file_no*=10;
+                sprintf(file_tmp,"%s_%03d",file_c,col_start);
+                FILE* tmp = fopen(file_tmp,"a+");
+                int tmp_d = fileno(tmp);
+                flock(tmp_d,LOCK_EX);
+                write_matrix(tmp,C);
+                flock(tmp_d,LOCK_UN);
+                fclose(tmp);
+            } else {
+                FILE* c = fopen(file_c,"a+");
+                int c_d = fileno(c);
+                flock(c_d,LOCK_EX);
+                rewrite_matrix(c,C,col_start,B.cols);
+                flock(c_d,LOCK_UN);
+                fclose(c);
+            }
             counter++;
-            free((void*)A.matrix);
-            free((void*)B.matrix);
-            free((void*)C.matrix);
+            free_matrix(A);
+            free_matrix(B);
+            free_matrix(C);
+            fclose(a);
+            fclose(b);
         } else flock(msg_d,LOCK_UN);
     }
     free((void*)file_c);
@@ -167,6 +220,24 @@ int run_processes(char* list,int max_workers,int max_time,int write_type){
         printf("Proces %d wykonał %d mnożeń\n", children[i],WEXITSTATUS(result));
     }
     remove("msg");
+    if(write_type){
+        char* cmd = 
+            (char*)calloc(FILENAME_MAX,sizeof(char)),
+            *file_c = 
+            (char*)calloc(FILENAME_MAX,sizeof(char));
+        FILE* list_file = fopen(list,"r");
+        do{
+            fscanf(list_file,"%*s %*s %s",file_c);
+            sprintf(cmd,"paste %s_* > %s; rm -f %s_*",file_c, file_c,file_c);
+            child_pid = fork();
+            if(child_pid == 0){
+                execlp("bash","bash","-c",cmd,NULL);
+            }
+        } while (getc(list_file) != EOF);
+        free((void*)file_c);
+        free((void*)cmd);
+        fclose(list_file);
+    }
     return 0;
 }
 
