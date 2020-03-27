@@ -5,6 +5,7 @@
 #include <time.h>
 #include <sys/wait.h>
 #include <sys/file.h>
+#include <sys/resource.h>
 
 int COMMON = 0;
 int SEPARATE = 1;
@@ -14,6 +15,30 @@ struct matrix{
     int rows;
     int **matrix;
 };
+
+void set_limits(int max_cpu_time, int max_mem){
+    struct rlimit cpu_limit;
+    struct rlimit mem_limit;
+    cpu_limit.rlim_max = (rlim_t) max_cpu_time;
+    cpu_limit.rlim_cur = (rlim_t) max_cpu_time;
+    setrlimit(RLIMIT_CPU, &cpu_limit);
+    mem_limit.rlim_max = (rlim_t) max_mem*1000000;
+    mem_limit.rlim_cur = (rlim_t) max_mem*1000000;
+    setrlimit(RLIMIT_AS, &mem_limit);
+}
+
+long int get_time(struct timeval time){
+    return (long int)time.tv_sec * 1000000 + (long int)time.tv_usec;
+}
+
+void write_usage(struct rusage not_included, struct rusage included){
+    long int user = get_time(included.ru_utime) - get_time(not_included.ru_utime);
+    long int system = get_time(included.ru_stime) - get_time(not_included.ru_stime);
+    long int mem = included.ru_maxrss - not_included.ru_maxrss;
+    printf("CPU czas użytkownika (s): %lf\n", (double)user / 1000000);
+    printf("CPU czas systemu (s): %lf\n", (double)system / 1000000);
+    printf("RSS (MB): %f\n",(double)mem/1000);
+}
 
 struct matrix multiply(struct matrix A, struct matrix B, int start, int end){
     int sum = 0;
@@ -188,13 +213,14 @@ int proces(char* list, int workers_num, int max_time, int write_type){
     return counter;
 }
 
-int run_processes(char* list,int max_workers,int max_time,int write_type){
+int run_processes(char* list,int max_workers,int max_time,int write_type, int max_cpu_time, int max_mem){
     pid_t *children = 
         (pid_t*)calloc(max_workers,sizeof(pid_t));
     pid_t child_pid;
     for (int i =0; i< max_workers; i++){
         child_pid = fork();
         if(child_pid == 0){
+            set_limits(max_cpu_time,max_mem);
             int result = proces(list,max_workers,max_time,write_type);
             exit(result);
         } else {
@@ -203,8 +229,13 @@ int run_processes(char* list,int max_workers,int max_time,int write_type){
     }
     int result;
     for (int i =0; i< max_workers; i++){
+        struct rusage not_included;
+        struct rusage included;
+        getrusage(RUSAGE_CHILDREN,&not_included);
         waitpid(children[i], &result, 0);
+        getrusage(RUSAGE_CHILDREN,&included);
         printf("Proces %d wykonał %d mnożeń\n", children[i],WEXITSTATUS(result));
+        write_usage(not_included,included);
     }
     remove("msg");
     //remove("log");
@@ -230,10 +261,12 @@ int run_processes(char* list,int max_workers,int max_time,int write_type){
 }
 
 int main(int argc, char** argv){
-    if (argc != 5) return 22;
+    if (argc != 7) return 22;
     char* list = argv[1];
     int max_workers = atoi(argv[2]);
     int max_time = atoi(argv[3]);
+    int max_cpu_time = atoi(argv[5]);
+    int max_mem = atoi(argv[6]);
     int write_type;
     if(strcmp(argv[4],"c") == 0) write_type = COMMON;
     else if (strcmp(argv[4],"s") == 0) write_type = SEPARATE;
@@ -244,5 +277,5 @@ int main(int argc, char** argv){
     FILE* log = fopen("log","a+");
     fprintf(log,"%d %d\n",max_workers, max_time);
     fflush(log);
-    return run_processes(list,max_workers,max_time,write_type);
+    return run_processes(list,max_workers,max_time,write_type,max_cpu_time, max_mem);
 }

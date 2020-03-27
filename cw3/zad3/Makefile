@@ -9,6 +9,7 @@ MIN = 4
 MAX = 6
 FILES = 3
 
+
 clean_all:
 	rm -f *.o log msg out*
 
@@ -17,8 +18,8 @@ clean:
 
 build:clean
 	$(CC) macierz.c -o macierz.o
-	$(CC) generator.c -o generator.o
-	$(CC) tester.c -o tester.o
+	$(CC) ../zad2/generator.c -o generator.o
+	$(CC) ../zad2/tester.c -o tester.o
 
 generate:build
 	./generator.o $(FILES) $(MIN) $(MAX)
