@@ -182,7 +182,7 @@ int proces(char* list, int workers_num, int max_time, int write_type){
     free((void*)file_b);
     free((void*)file_a);
     free((void*)msg_line);
-    fclose(log);
+    //fclose(log);
     fclose(msg);
     fclose(list_file);
     return counter;
