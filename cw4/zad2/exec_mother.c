@@ -7,11 +7,6 @@
 
 FILE* report;
 
-void handler(int signum){
-    fprintf(report,"SIGUSR1 received\n");
-    fflush(report);
-}
-
 int main(int argc, char** argv){
     if (argc != 2) return 22;
     struct sigaction action;
@@ -24,8 +19,6 @@ int main(int argc, char** argv){
         action.sa_handler = SIG_IGN;
     } else if (strcmp(argv[1],"mask") == 0){
         sigaddset(&mask,SIGUSR1);
-    } else if (strcmp(argv[1],"handler") == 0){
-        action.sa_handler = handler;
     } else if (strcmp(argv[1],"pending") == 0){
         pending = 1;
         sigaddset(&mask,SIGUSR1);
@@ -33,7 +26,7 @@ int main(int argc, char** argv){
     sigprocmask(SIG_BLOCK, &mask, NULL);
     sigaction(SIGUSR1,&action,NULL);
     report = fopen("raport2.txt","a");
-    fprintf(report,"----------\nfork, opcja %s\n",argv[1]);
+    fprintf(report,"----------\nexec, opcja %s\n",argv[1]);
     fprintf(report,"przed raise w procesie macierzystym\n");
     fflush(report);
     raise(SIGUSR1);
@@ -44,25 +37,7 @@ int main(int argc, char** argv){
         fprintf(report,"oczekujący SIGUSR1 widoczny w procesie macierzystym\n");
         fflush(report);
     }
-    pid_t child = fork();
-    if (child == 0)
-    {
-        if(!pending){
-            fprintf(report,"przed raise w procesie potomnym\n");
-            fflush(report);
-            raise(SIGUSR1);
-            fprintf(report,"po raise w procesie potomnym\n");
-            fflush(report);
-        }
-        sigpending(&mask);
-        if(sigismember(&mask,SIGUSR1)){
-            fprintf(report,"oczekujący SIGUSR1 widoczny w procesie potomnym\n");
-            fflush(report);
-        } else {
-            fprintf(report,"oczekujący SIGUSR1 nie widoczny w procesie potomnym\n");
-            fflush(report);
-        }
-    }
     fclose(report);
+    execl("./exec_child.o","exec_child.o",argv[1],pending ? "1" : "0",NULL);
     return 0;
 }
