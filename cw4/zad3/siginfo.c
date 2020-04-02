@@ -10,10 +10,10 @@ void handler(int sig, siginfo_t *info, void *ucontext){
         printf("otrzymano SIGCHLD\npid potomka: %d\nrzeczywiste uid: %d\nstatus wyjścia: %d\nczas systemowy: %ld\n",
         info->si_pid,info->si_uid,info->si_status,info->si_stime);
     } else if(sig == SIGALRM){
-        printf("otrzymano SIGALRM\npid wysyłającego: %d\nid timera: %d\nczas od wysłania: %d\nczas urzytkownika: %ld\n",
+        printf("otrzymano SIGALRM\npid wysyłającego: %d\nid timera: %d\nczas od wysłania: %d\nczas użytkownika: %ld\n",
         info->si_pid,info->si_timerid,info->si_overrun,info->si_utime);
     } else if(sig == SIGTSTP){
-        printf("otrzymano SIGTSTP\npid wysyłającego: %d\nrzeczywiste uid: %d\nczas systemowy: %ld\nczas urzytkownika: %ld\n",
+        printf("otrzymano SIGTSTP\npid wysyłającego: %d\nrzeczywiste uid: %d\nczas systemowy: %ld\nczas użytkownika: %ld\n",
         info->si_pid,info->si_uid,info->si_stime,info->si_utime);
     }   
     return;
