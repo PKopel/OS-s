@@ -25,11 +25,11 @@ int main(void){
     sigfillset(&new_action.sa_mask);
     new_action.sa_flags = SA_SIGINFO;
     if(sigaction(SIGCHLD, &new_action, NULL) < 0)
-        printf("can't catch SIGCHLD"); 
+        printf("can't catch SIGCHLD\n"); 
     if(sigaction(SIGALRM, &new_action, NULL) < 0)
-        printf("can't catch SIGALRM"); 
+        printf("can't catch SIGALRM\n"); 
     if(sigaction(SIGTSTP, &new_action, NULL) < 0)
-        printf("can't catch SIGTSTP"); 
+        printf("can't catch SIGTSTP\n"); 
     pid_t child = fork();
     if (child == 0)
         exit(10);
