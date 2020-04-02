@@ -8,25 +8,30 @@
 int counter = 0;
 pid_t catcher = -1;
 void (*send)(int);
-int sig1,sig2;
+int sig1,sig2,confirmation = 0;
 
 
 void handler(int sig, siginfo_t *info, void *ucontext){
     if(sig == sig1){
         if(info->si_value.sival_int)
             printf("sender received %d-th sig1\n",info->si_value.sival_int);
-        counter++;
+        if(!confirmation) counter++;
     } else if(sig == sig2){
         printf("sender: %d sig1\n",counter);
         counter = -1;
         exit(0);
-    }   
+    }
+    confirmation = 0;
     return;
 }
-
 void send_kill(int num){
     for (int i = 0; i < num; i++){
+        sigset_t new_mask;
+        sigfillset(&new_mask);
+        sigdelset(&new_mask,SIGUSR1);
+        confirmation = 1;
         kill(catcher,sig1);
+        sigsuspend(&new_mask);
     }
     kill(catcher,sig2);
 }
@@ -35,7 +40,12 @@ void send_queue(int num){
     union sigval number;
     for (int i = 0; i < num; i++){
         number.sival_int = i+1;
+        sigset_t new_mask;
+        sigfillset(&new_mask);
+        sigdelset(&new_mask,SIGUSR1);
+        confirmation = 1;
         sigqueue(catcher,sig1,number);
+        sigsuspend(&new_mask);
     }
     number.sival_int = -1;
     sigqueue(catcher,sig2,number);
@@ -66,11 +76,13 @@ int main(int argc, char** argv){
         printf("can't catch %d\n",sig1); 
     if(sigaction(sig2, &new_action, NULL) < 0)
         printf("can't catch %d\n",sig2); 
+    if(sigaction(SIGUSR1, &new_action, NULL) < 0)
+        printf("can't catch SIGUSR1\n"); 
     sigset_t mask;
     sigfillset(&mask);
     sigdelset(&mask,sig1);
     sigdelset(&mask,sig2);
-    sigprocmask(SIG_BLOCK,&mask,NULL);
+    sigprocmask(SIG_SETMASK,&mask,NULL);
     send(num);
     while(counter >= 0){
         pause();

@@ -18,7 +18,7 @@ void send_kill(int sig1, int sig2){
 }
 
 void send_queue(int sig1, int sig2){
-        union sigval number;
+    union sigval number;
     for (int i = 0; i < counter; i++){
         number.sival_int = i+1;
         sigqueue(sender,sig1,number);
@@ -29,7 +29,14 @@ void send_queue(int sig1, int sig2){
 
 void handler(int sig, siginfo_t *info, void *ucontext){
     if(sig == SIGUSR1 || sig == SIGRTMIN){
+        sender = info->si_pid;
         counter++;
+        if(info->si_value.sival_int){
+            union sigval val;
+            sigqueue(sender,SIGUSR1,val);
+        } else {
+            kill(sender,SIGUSR1);
+        }
     } else if(sig == SIGUSR2 || sig == SIGRTMIN+1){
         if(info->si_value.sival_int){
             send = send_queue;
