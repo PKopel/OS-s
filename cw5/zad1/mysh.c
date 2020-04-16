@@ -74,6 +74,7 @@ int execute_one(node_c** head,node_i** children,int in){
         execvp(args[0], args);
         exit(0);
     } else {
+        close(fd[1]);
         (*children)->val = pid;
         (*children)->next = init_node_i();
         (*children) = (*children)->next;
@@ -90,7 +91,7 @@ int execute_line(node_c* head){
     for(int i = STDIN_FILENO; head != NULL; i = execute_one(&head,&current,i));
     for(current = children; current != NULL; current = children){
         children = children->next;
-        printf("%d\n",current->val);
+        //printf("%d\n",current->val);
         if (current->val > 0) waitpid(current->val, NULL, 0);
         free((void*)current);
     }
