@@ -6,14 +6,15 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-int receive(int file, int fifo, int buff_size){
+int receive(FILE* file, int fifo, int buff_size){
     char* buff = 
         (char*)calloc(buff_size,sizeof(char));
     int chars_read;
     while((chars_read = read(fifo,buff,buff_size)) > 0){
-        write(file,buff,chars_read);
+        printf("%s\t%d\n",buff,chars_read);
+        fprintf(file,"%s",buff);
     }
-    close(file);
+    fclose(file);
     close(fifo);
     free((void*)buff);
     return 0;
@@ -21,8 +22,8 @@ int receive(int file, int fifo, int buff_size){
 
 int main(int argc, char** argv){
     if(argc != 4) return 22;
-    int fifo = open(argv[1],O_WRONLY);
-    int file = open(argv[2],O_RDONLY);
+    int fifo = open(argv[1],O_RDONLY);
+    FILE* file = fopen(argv[2],"w");
     int buff_size = atoi(argv[3]);
     return receive(file,fifo,buff_size);
 }
