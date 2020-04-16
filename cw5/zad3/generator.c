@@ -18,7 +18,7 @@ int main(int argc, char** argv){
         no_lines = rand()%5 + 5;
         line_size = rand()%10 + 10;
         current = rand()%93 + 33;
-        sprintf(file_name,"%s:%02d:%02d:%02d","in",i,no_lines,line_size);
+        sprintf(file_name,"%s_%02d","in",i);
         FILE* file = fopen(file_name,"w");
         for(int k = 0; k< no_lines;k++){
             for (int j = 1; j < line_size-1; j++){
