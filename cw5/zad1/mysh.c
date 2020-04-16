@@ -6,6 +6,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <time.h>
+#include <errno.h>
 
 typedef struct node_c{
     struct node_c* next;
@@ -16,6 +17,11 @@ typedef struct node_i{
     struct node_i* next;
     int val;
 } node_i;
+
+int error(char* msg){
+    perror(msg);
+    exit(errno);
+}
 
 node_c* init_node_c(){
     node_c* new = (node_c*)malloc(sizeof(node_c));
@@ -65,15 +71,15 @@ int execute_one(node_c** head,node_i** children,int in){
         (*head) = (*head)->next;
     }
     int fd[2];
-    pipe(fd);
+    if(pipe(fd) < 0) error("pipe");
     pid_t pid = fork();
     if (pid == 0) {
         close(fd[0]); 
-        if (not_last) dup2(fd[1],STDOUT_FILENO);
-        dup2(in,STDIN_FILENO);
-        execvp(args[0], args);
+        if (not_last) if(dup2(fd[1],STDOUT_FILENO) < 0) error("dup2 stdout");
+        if(dup2(in,STDIN_FILENO) < 0) error("dup2 stdin");
+        if(execvp(args[0], args) < 0) error("exec");
         exit(0);
-    } else {
+    } else if(pid > 0){
         close(fd[1]);
         (*children)->val = pid;
         (*children)->next = init_node_i();
@@ -82,17 +88,15 @@ int execute_one(node_c** head,node_i** children,int in){
             free((void*)args[j]);
         free((void*)args);
         return fd[0];
-    }
-    return -1;
+    } else return -1;
 }
 
 int execute_line(node_c* head){
     node_i* children = init_node_i(), *current = children;
     for(int i = STDIN_FILENO; head != NULL; i = execute_one(&head,&current,i));
     for(current = children; current != NULL; current = children){
-        children = children->next;
-        //printf("%d\n",current->val);
-        if (current->val > 0) waitpid(current->val, NULL, 0);
+        children = children->next->val > 0 ? children->next : NULL;
+        if( waitpid(current->val, NULL, 0) < 0) error("wait");
         free((void*)current);
     }
     return 0;
@@ -102,8 +106,6 @@ int execute_file(FILE* file){
     while(!feof(file)){
         fseek(file,-1,1);
         node_c* head = read_line(file);
-        //for (node_c* c = head; c != NULL ; c = c->next) printf("%s _ ",c->val);
-        //printf("\n\n");
         execute_line(head);
     }
     return 0;
@@ -112,6 +114,7 @@ int execute_file(FILE* file){
 int main(int argc, char** argv){
     if (argc != 2) return 22;
     FILE* file = fopen(argv[1],"r");
+    if(file == NULL) error("open file");
     execute_file(file);
     fclose(file);
     return 0;
