@@ -6,6 +6,12 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
+#include <errno.h>
+
+int error(char* msg){
+    perror(msg);
+    exit(errno);
+}
 
 int send(char* file_name, char* fifo_name, int buff_size){
     char* buff = 
@@ -14,14 +20,12 @@ int send(char* file_name, char* fifo_name, int buff_size){
         (char*)calloc(buff_size+8,sizeof(char));
     int fifo = open(fifo_name,O_WRONLY),
         file = open(file_name,O_RDONLY);
+    if( fifo < 0 || file < 0) error("open");
     int chars_read, pid = getpid();
     srand(time(NULL));
     while((chars_read = read(file,buff,buff_size)) > 0){
         sprintf(marked_buff,"#%d#%s",pid,buff);
-        printf("%s", marked_buff);
-        //fifo = open(fifo_name,O_WRONLY);
         write(fifo,marked_buff,chars_read+8);
-        //close(fifo);
         sleep(rand()%2+1);
     }
     close(fifo);
@@ -34,5 +38,6 @@ int send(char* file_name, char* fifo_name, int buff_size){
 int main(int argc, char** argv){
     if(argc != 4) return 22;
     int buff_size = atoi(argv[3]);
-    return send(argv[2],argv[1],buff_size);
+    if(buff_size > 0) return send(argv[2],argv[1],buff_size);
+    else error("buff size");
 }
