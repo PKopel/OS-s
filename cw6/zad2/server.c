@@ -6,12 +6,14 @@ int counter = 0;
 int current = 1;
 
 void send(msg_t* msg, int id){
-     if (msgsnd(queues[id].q_id, msg, MSG_SIZE, 0) == -1) 
+    if (mq_send((mqd_t)queues[id].q_id, msg->message, MSG_MAX, 10 - msg->type) == -1) 
         error("server send");
 }
 
 void delete_queue(int q_id){
-    if (msgctl(q_id, IPC_RMID, NULL) < 0) 
+    if (mq_close(q_id) < 0) 
+        error("closing queue");
+    if (mq_unlink(server_name) < 0)
         error("deleting queue");
 }
 
@@ -25,40 +27,38 @@ void handle_sigint(int signum){
         }
     }
     while (counter > 0){
-        if (msgrcv(queues[0].q_id, &msg, MSG_SIZE, STOP, 0) < 0)           
+        if ((int)mq_receive((mqd_t)queues[0].q_id, msg.message, MSG_MAX, (unsigned int *)&(msg.type)) < 0)           
             error("server receive");
-        else counter--;
+        if(10 - msg.type == STOP ) counter--;
     }
     exit(EXIT_SUCCESS);
 }
 
 void init(msg_t* msg){
-    key_t client_key = msg->sender_id;
     int client_queue_id;
-    if ((client_queue_id = msgget(client_key, 0)) == -1) 
+    if ((client_queue_id = (int)mq_open(msg->message, O_WRONLY)) == -1) 
             error("client queue");
     msg->type = RESPONSE;
     if (counter < MAX_CLIENTS){
         printf("new client #%d\n", current);
-        msg->sender_id = current;
+        msg->message[0] = current;
         queues[current].q_id = client_queue_id;
-        queues[current].key = client_key;
         counter++;
         starting = 0;
     } else {
-        msg->sender_id = -1;
+        msg->message[0] = -1;
     }
     send(msg,current);
     while (queues[current].q_id > 0 && current < MAX_CLIENTS) current++;
 }
 
 void stop(msg_t* msg){
-    int i = msg->sender_id;
-    if(msg->message[0]){
-        int connected_id = msg->message[1];
+    int i = msg->message[0];
+    if(msg->message[1]){
+        int connected_id = msg->message[2];
         queues[connected_id].aviable = 1;
         msg->type = DISCONNECT;
-        msg->sender_id = 0;
+        msg->message[0] = 0;
         send(msg,connected_id);
     }
     counter--;
@@ -67,46 +67,40 @@ void stop(msg_t* msg){
 }
 
 void list(msg_t* msg){
-    int j = 1;
-    msg->message[0] = counter;
+    int j = 2;
+    msg->message[1] = counter;
     for (int i = 1; i < MAX_CLIENTS; ++i){
-        if (queues[i].q_id > 0 && i != msg->sender_id)
+        if (queues[i].q_id > 0 && i != msg->message[0])
         msg->message[j++] = i;
         msg->message[j++] = queues[i].aviable;
     }
     msg->type = RESPONSE;
-    msg->sender_id = 0;
-    send(msg,msg->sender_id);
+    msg->message[0] = 0;
+    send(msg,msg->message[0]);
 }
 
 void connect(msg_t * msg){
-    int receiver_id = msg->message[0];
-    int sender_id = msg->sender_id;
+    int receiver_id = msg->message[1];
+    int sender_id = msg->message[0];
     if (queues[receiver_id].aviable && queues[sender_id].aviable){
         queues[sender_id].aviable = 0;
         queues[receiver_id].aviable = 0;
-        msg->type = CONNECT;
-        msg->sender_id = queues[receiver_id].key;
-        msg->message[0] = sender_id;
-        send(msg,sender_id);
-        msg->sender_id = queues[sender_id].key;
         send(msg,receiver_id);
     } else {
         msg->type = RESPONSE;
-        msg->sender_id = -1;
+        msg->message[0] = -1;
         send(msg,sender_id);
     }
 }
 
 void disconnect(msg_t* msg){
-    int receiver_id = msg->message[0];
-    int sender_id = msg->sender_id;
+    int receiver_id = msg->message[1];
+    int sender_id = msg->message[0];
     queues[sender_id].aviable = 1;
     queues[receiver_id].aviable = 1;
 }
 
 void resolve(msg_t * msg){
-    if (!msg) return;
     switch(msg->type){
         case INIT:
         printf("INIT\n");
@@ -145,16 +139,18 @@ int main(void){
     for (int i = 0; i < MAX_CLIENTS + 1; i++) 
         queues[i] = init_queue_id();
 
-    if ((queues[0].key = server_key()) == -1)          
-        error("server ftok");
+    struct mq_attr attr;
+    attr.mq_maxmsg = MAX_CLIENTS;
+    attr.mq_msgsize = MSG_MAX;
 
-    if ((queues[0].q_id = msgget(queues[0].key, IPC_CREAT | IPC_EXCL | 0666)) < 0)         
-        error("server msgget");
+    if ((queues[0].q_id = (int)mq_open(server_name, O_RDONLY | O_CREAT |O_EXCL, 0666, &attr)) < 0)         
+        error("server mq_open");
 
     msg_t msg;
     while(counter > 0 || starting){ 
-        if (msgrcv(queues[0].q_id, &msg, MSG_SIZE, -8, 0) < 0)           
-            error("msgrcv");
+        if ((int)mq_receive((mqd_t)queues[0].q_id, msg.message, MSG_MAX, (unsigned int *)&(msg.type)) < 0)           
+            error("mq_receive");
+        msg.type = 10 - (unsigned int)msg.type;
         resolve(&msg);
     }
     return 0;
