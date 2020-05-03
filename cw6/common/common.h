@@ -22,7 +22,7 @@
 const char* server_name = "/serv_cw6";
 
 key_t server_key(){
-    return ftok("/tmp",0x111);
+    return ftok("/tmp",0x112);
 }
 
 int error(char * msg){
