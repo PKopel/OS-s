@@ -1,6 +1,7 @@
 #include "common.h"
 
 int main(void){
+    init_worker(2);
     int mxn[3][2];
     while (1)
     {

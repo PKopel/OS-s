@@ -7,58 +7,73 @@ typedef union semun {
 } semun;
 
 int sem_desc;
-int* shm;
+int shm_desc;
+
+
+void creat_sem(){
+    key_t sem_key = ftok("/tmp",0x111);
+    if((sem_desc = semget(sem_key, 2, IPC_CREAT | IPC_EXCL | 0666)) < 0) error("creat semget");
+    union semun sem_un;
+    sem_un.val = MAX_ORDERS;
+    if(semctl(sem_desc, 0,SETVAL, sem_un) < 0) error("creat semctl");
+    sem_un.val = 1;
+    if(semctl(sem_desc, 1,SETVAL, sem_un) < 0) error("creat semctl");
+}
 
 void get_sem(){
     key_t sem_key = ftok("/tmp",0x111);
-    sem_desc = semget(sem_key, 2, IPC_CREAT | 0666);
-    union semun sem_un;
-    sem_un.val = MAX_ORDERS;
-    semctl(sem_desc, 0,SETVAL, sem_un);
-    sem_un.val = 1;
-    semctl(sem_desc, 1,SETVAL, sem_un);
+    if((sem_desc = semget(sem_key, 0, 0)) < 0) error("get semget");
+}
+
+void remove_sem(){
+    if(semctl(sem_desc, 0, IPC_RMID, NULL) < 0) error("remove semctl");
+}
+
+void creat_shm(){
+    key_t shm_key = ftok("/tmp",0x123);
+    if((shm = (int*)shmget(shm_key, MAX_ORDERS + 5, IPC_CREAT | IPC_EXCL | 0666)) < 0) error("creat shmget");
 }
 
 void get_shm(){
     key_t shm_key = ftok("/tmp",0x123);
+    if((shm_desc = shmget(shm_key, 0, 0)) < 0) error("get shmget");
+    if((shm = (int*)shmat(shm_desc, NULL, 0)) < 0) error("shmat");
 }
 
-void close_sem(int desc){
-
+void close_shm(){
+    if(shmdt((void*)shm) < 0) error("shmdt");
 }
 
-void close_shm(void* shm, int desc){
-    
+void remove_shm(){
+    if(shmctl(shm_desc, IPC_RMID, NULL) < 0) error("remove shmctl");
 }
 
 void mxn_get_sem(action action_n){
-
+    int nops = action_n == SET ? 2 : 1;
+    struct sembuf* get = 
+        (struct sembuf*) calloc(nops,sizeof(struct sembuf));
+    get[0].sem_num = 1;
+    get[0].sem_flg = SEM_UNDO;
+    get[0].sem_op = -1;
+    if(action_n == SET) {
+        get[1].sem_num = 0;
+        get[1].sem_flg = SEM_UNDO;
+        get[1].sem_op = -1;
+    }
+    if(semop(sem_desc, get, nops) < 0) error("get semop");
 }
 
 void mxn_return_sem(action action_x){
-
-}
-
-int get_n(){
-
-}
-
-void set_n(int n){
-
-}
-
-int get_m(){
-
-}
-
-void set_m(int m){
-
-}
-
-int get_x(){
-
-}
-
-void set_x(int x){
-
+    int nops = action_x == DEC ? 2 : 1;
+    struct sembuf* get = 
+        (struct sembuf*) calloc(nops,sizeof(struct sembuf));
+    get[0].sem_num = 1;
+    get[0].sem_flg = SEM_UNDO;
+    get[0].sem_op = 1;
+    if(action_x == DEC) {
+        get[1].sem_num = 0;
+        get[1].sem_flg = SEM_UNDO;
+        get[1].sem_op = 1;
+    }
+    if(semop(sem_desc, get, nops) < 0) error("return semop");
 }

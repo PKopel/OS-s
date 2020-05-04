@@ -1,6 +1,7 @@
 #include "common.h"
 
 int main(void){
+    init_worker(-1);
     srandom(time(NULL));
     int max_n = 1000, mxn[3][2];
     while (1)

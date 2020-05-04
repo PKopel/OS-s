@@ -22,6 +22,17 @@ typedef enum action{
     DEC = 4
 } action;
 
+/*
+    shm[0] - first empty slot in order table
+    shm[1] - first unpacked order
+    shm[2] - first not send order
+    shm[3] - m value
+    shm[4] - x value
+    shm[5+] - order table
+*/
+int* shm;
+int n_stage;
+
 void log_activity( pid_t pid, int n, char* msg, int m, int x ){
     struct timespec timestamp;
     clock_gettime(CLOCK_REALTIME, &timestamp);
@@ -37,21 +48,57 @@ int error(char * msg){
     exit(errno);
 }
 
+void creat_sem();
+
+void creat_shm();
+
+void get_sem();
+
+void get_shm();
+
+void remove_sem();
+
+void remove_shm();
+
+void init_worker(int worker_stage){
+    n_stage = worker_stage;
+    get_sem();
+    get_shm();
+    if ( atexit(close_shm) < 0) 
+        error("atexit");
+}
+
 void mxn_get_sem(action action_n);
 
 void mxn_return_sem(action action_x);
 
-int get_n();
+int get_n(){
+    int first_n = shm[n_stage];
+    shm[n_stage] = (shm[n_stage] + 1)%MAX_ORDERS;
+    return shm[first_n + 5];
+}
 
-void set_n(int n);
+void set_n(int n){
+    int first_empty = shm[0];
+    shm[0] = (shm[0] + 1)%MAX_ORDERS;
+    shm[first_empty + 5] = n;
+}
 
-int get_m();
+int get_m(){
+    return shm[3];
+}
 
-void set_m(int m);
+void set_m(int m){
+    shm[3] = m;
+}
 
-int get_x();
+int get_x(){
+    return shm[4];
+}
 
-void set_x(int x);
+void set_x(int x){
+    shm[4] = x;
+}
 
 void interact(int* num, int (*getter)(void), void (*setter)(int)){
     switch (num[1])
