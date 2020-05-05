@@ -2,6 +2,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <math.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -60,12 +61,13 @@ void remove_sem();
 
 void remove_shm();
 
+void close_shm();
+
 void init_worker(int worker_stage){
     n_stage = worker_stage;
     get_sem();
     get_shm();
-    if ( atexit(close_shm) < 0) 
-        error("atexit");
+    if(atexit(close_shm) < 0) error("atexit");
 }
 
 void mxn_get_sem(action action_n);
