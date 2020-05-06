@@ -82,7 +82,7 @@ void mxn_get_sem(action action_m, action action_x, action action_n){
     if(semop(sem_desc, get, nops) < 0) error("get semop");
 }
 
-void mxn_return_sem(action action_x){
+void mxn_return_sem(action action_m, action action_x, action action_n){
     int nops = action_x == DEC ? 2 : 1;
     struct sembuf* get = 
         (struct sembuf*) calloc(nops,sizeof(struct sembuf));

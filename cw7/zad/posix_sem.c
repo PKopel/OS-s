@@ -65,21 +65,21 @@ void mxn_get_sem(action action_m, action action_x, action action_n){
     if(action_m == DEC){
         if(sem_wait(sem_m_desc) < 0) error("table sem_wait");
     }
-    if(action_m == INC){
-        if(sem_post(sem_m_desc) < 0) error("table sem_wait");
-    }
     if(action_x == DEC){
         if(sem_wait(sem_x_desc) < 0) error("table sem_wait");
-    }
-    if(action_x == INC){
-        if(sem_post(sem_x_desc) < 0) error("table sem_wait");
     }
     if(sem_wait(sem_n_desc) < 0) error("n sem_wait");
 }
 
-void mxn_return_sem(action action_x){
+void mxn_return_sem(action action_m, action action_x, action action_n){
     if(sem_post(sem_n_desc) < 0) error("n sem_post");
     if(action_x == DEC){
         if(sem_post(sem_table_desc) < 0) error("table sem_post");
+    }
+    if(action_m == INC){
+        if(sem_post(sem_m_desc) < 0) error("table sem_wait");
+    }
+    if(action_x == INC){
+        if(sem_post(sem_x_desc) < 0) error("table sem_wait");
     }
 }

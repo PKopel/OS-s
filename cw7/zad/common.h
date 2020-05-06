@@ -58,7 +58,7 @@ void init_worker(int worker_stage);
 
 void mxn_get_sem(action action_m, action action_x, action action_n);
 
-void mxn_return_sem(action action_x);
+void mxn_return_sem(action action_m, action action_x, action action_n);
 
 int get_n();
 

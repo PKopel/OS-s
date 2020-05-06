@@ -81,6 +81,5 @@ void mxn_interact(int mxn[3][2]){
     interact(mxn[0],get_m,set_m);
     interact(mxn[2],get_n,set_n);
     interact(mxn[1],get_x,set_x);
-    log_shm();
-    mxn_return_sem(mxn[1][1]);
+    mxn_return_sem(mxn[0][1], mxn[1][1], mxn[2][1]);
 }
