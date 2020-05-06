@@ -14,13 +14,13 @@
 #include <semaphore.h>
 #include <fcntl.h>
 
-#define MAX_ORDERS 50
+#define MAX_ORDERS 40
 
 typedef enum action{
     GET = 1,
     SET = 2,
-    INC = 3,
-    DEC = 4
+    INC = 4,
+    DEC = 6
 } action;
 
 /*
@@ -35,6 +35,8 @@ int* shm;
 int n_stage;
 
 void log_activity( pid_t pid, int n, char* msg, int m, int x );
+
+void log_debug(char* msg);
 
 int error(char * msg);
 
@@ -54,7 +56,7 @@ void close_ipc();
 
 void init_worker(int worker_stage);
 
-void mxn_get_sem(action action_n);
+void mxn_get_sem(action action_m, action action_x, action action_n);
 
 void mxn_return_sem(action action_x);
 

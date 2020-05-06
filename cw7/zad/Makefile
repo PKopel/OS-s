@@ -1,7 +1,7 @@
 CC = gcc -Wall
-SENDERS=3
+SENDERS=2
 PACKERS=3
-RECEIVERS=3
+RECEIVERS=4
 
 clean:
 	rm -f *.o
