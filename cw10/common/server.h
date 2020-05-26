@@ -13,17 +13,17 @@ typedef struct pair{
     int client_x;
 } pair;
 
-char* unix_name;
-int unix_fd = -1;
-char* inet_port;
-int inet_fd = -1;
+extern char* unix_name;
+extern int unix_fd;
+extern char* inet_port;
+extern int inet_fd ;
 
-client clients[MAX_CLIENTS];
-int clients_number;
-pthread_mutex_t clients_mtx = PTHREAD_MUTEX_INITIALIZER;
-int waiting_for_pair;
-pair pairs[MAX_CLIENTS/2];
-pthread_mutex_t pairs_mtx = PTHREAD_MUTEX_INITIALIZER;
+extern client clients[MAX_CLIENTS];
+extern int clients_number;
+extern pthread_mutex_t clients_mtx;
+extern int waiting_for_pair;
+extern pair pairs[MAX_CLIENTS/2];
+extern pthread_mutex_t pairs_mtx;
 
 
 void start_server_socket(int* sock_fd, char* sock_name, int family, int protocol);
@@ -34,9 +34,11 @@ void server_cleanup();
 
 int register_client(client client, char* msg);
 
-int send_ping(client client);
+void remove_client(int index);
 
-int send_msg(client client, char* msg);
+void send_ping(client client);
+
+void send_msg(client client, char* msg);
 
 int process_msg(client client, char* message);
 

@@ -33,7 +33,11 @@ int make_sockaddr(struct sockaddr *sa, socklen_t *len, const char *name,int doma
         }
         *servicename = '\0';
         servicename++;
-        ec_ai( getaddrinfo(nodename, servicename, &hint, &infop) );
+        int ret;
+        if( (ret = getaddrinfo(nodename, servicename, &hint, &infop)) != 0 ){
+            printf("%s\n", gai_strerror(ret));
+            exit(EXIT_FAILURE);
+        };
         memcpy(sa, infop->ai_addr, infop->ai_addrlen);
         *len = infop->ai_addrlen;
         freeaddrinfo(infop);

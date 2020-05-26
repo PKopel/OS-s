@@ -5,8 +5,8 @@ void start_client_socket( int* sock_fd, int family, int protocol){
     socklen_t sa_len;
     make_sockaddr(&sa, &sa_len, server_name, family, 0);
 
-    if( sock_fd = socket(family, protocol, 0) == -1 ) error("socket");
-    while (connect(sock_fd, &sa, &sa_len) == -1)
+    if( (*sock_fd = socket(family, protocol, 0)) == -1 ) error("socket");
+    while (connect(*sock_fd, &sa, sa_len) == -1)
         if (errno == ENOENT) sleep(1);
         else error("connect");
 }

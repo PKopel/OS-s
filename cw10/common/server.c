@@ -1,5 +1,17 @@
 #include "server.h"
 
+char* unix_name;
+int unix_fd = -1;
+char* inet_port;
+int inet_fd = -1;
+
+client clients[MAX_CLIENTS];
+int clients_number;
+pthread_mutex_t clients_mtx = PTHREAD_MUTEX_INITIALIZER;
+int waiting_for_pair;
+pair pairs[MAX_CLIENTS/2];
+pthread_mutex_t pairs_mtx = PTHREAD_MUTEX_INITIALIZER;
+
 void make_move(char* move){
     char symbol;
     int pair_id, field;
@@ -85,7 +97,7 @@ int register_client(client client, char* msg) {
     if (++clients_number %2 == 0) {
         pthread_mutex_lock(&pairs_mtx);
         for (int i = 0; i < MAX_CLIENTS/2; i++){
-            if(pairs[i].client_x = -1){
+            if(pairs[i].client_x == -1){
                 pairs[i].client_x = waiting_for_pair;
                 pairs[i].client_o = free_place;
                 send_msg(clients[waiting_for_pair], "symbol X");
@@ -101,10 +113,10 @@ int register_client(client client, char* msg) {
     return free_place;
 }
 
-int remove_client(int index){
+void remove_client(int index){
     client closing = clients[index];
     if(close(closing.socket_fd) == -1) error("close socket");
-    closing.socket_fd == -1;
+    closing.socket_fd = -1;
     clients_number--;
     if(closing.pair_id != -1){
         pthread_mutex_lock(&pairs_mtx);
@@ -121,11 +133,11 @@ int remove_client(int index){
 }
 
 int process_msg(client client, char* msg) {
+    char id;
     switch (msg[0])
     {
     case 'l':
-        char* id;
-        switch (*id = register_client(client, msg) )
+        switch (id = register_client(client, msg) )
         {
         case -1:
             send_msg(client, "too many clients");
@@ -134,7 +146,7 @@ int process_msg(client client, char* msg) {
             send_msg(client, "name in use");
             return -1;
         default:  
-            send_msg(client, id);
+            send_msg(client, &id);
             return 0;
         }
         break;
@@ -171,3 +183,4 @@ void * ping_therad(void * arg) {
         pthread_mutex_unlock(&clients_mtx);
     }
     return (void*) 0;
+}

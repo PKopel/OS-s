@@ -1,11 +1,11 @@
 #include "../common/server.h"
 
-int send_ping(client client){
+void send_ping(client client){
     if( sendto(client.socket_fd, "ping", 4, 0, &client.addr, sizeof(client.addr) ) == -1 ) error("write to socket");
     client.active = 0;
 }
 
-int send_msg(client client, char* msg){
+void send_msg(client client, char* msg){
     int msg_len = strlen(msg);
     if( sendto(client.socket_fd, msg, msg_len, 0, &client.addr, sizeof(client.addr) ) == -1 ) error("write to socket");
 }
@@ -15,8 +15,8 @@ void start_server_socket(int* sock_fd, char* sock_name, int family, int protocol
     socklen_t sa_len;
     make_sockaddr(&sa, &sa_len, sock_name, family, 1);
 
-    if ((sock_fd = socket(family, protocol, 0)) == -1) error("socket");
-    if ((bind(sock_fd, &sa, sa_len)) == -1) error("bind");
+    if ((*sock_fd = socket(family, protocol, 0)) == -1) error("socket");
+    if ((bind(*sock_fd, &sa, sa_len)) == -1) error("bind");
 }
 
 int find_client(struct sockaddr addr){
@@ -33,18 +33,19 @@ int find_client(struct sockaddr addr){
 
 void* socket_thread(void* arg){
     struct sockaddr sa;
-    int sa_len = sizeof(sa), client_id;
+    socklen_t sa_len = sizeof(sa);
+    int client_id;
     char buf[30];
     ssize_t nrecv;
     client client;
     while (1) {
-        if( nrecv = recvfrom(unix_fd, buf, sizeof(buf), 0, &sa, &sa_len) == -1) error("recvfrom");
+        if( (nrecv = recvfrom(unix_fd, buf, sizeof(buf), 0, &sa, &sa_len)) == -1) error("recvfrom");
         if(( client_id = find_client(sa)) == -1) {
             client.socket_fd = unix_fd;
             client.addr = sa;
         } else client = clients[client_id];
         process_msg(client, buf);
-        if( nrecv = recvfrom(inet_fd, buf, sizeof(buf), 0, &sa, &sa_len) == -1) error("recvfrom");
+        if( (nrecv = recvfrom(inet_fd, buf, sizeof(buf), 0, &sa, &sa_len)) == -1) error("recvfrom");
         if(( client_id = find_client(sa)) == -1) {
             client.socket_fd = inet_fd;
             client.addr = sa;

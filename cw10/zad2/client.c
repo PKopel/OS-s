@@ -10,8 +10,8 @@ void start_client_socket( int* sock_fd, int family, int protocol){
     socklen_t client_len;
     make_sockaddr(&client_addr, &client_len, client_name, family, 0);
 
-    if( sock_fd = socket(family, protocol, 0) == -1 ) error("socket");
-    if( bind(sock_fd, &client_addr, client_len) == -1) error("bind");
+    if( (*sock_fd = socket(family, protocol, 0)) == -1 ) error("socket");
+    if( bind(*sock_fd, &client_addr, client_len) == -1) error("bind");
 }
 
 void send_msg(char* msg){

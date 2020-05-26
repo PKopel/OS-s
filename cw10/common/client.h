@@ -16,4 +16,6 @@ void process_msg(char* msg);
 
 void start_client(int family, int protocol);
 
+void start_client_socket(int* sock_fd, int family, int protocol);
+
 
