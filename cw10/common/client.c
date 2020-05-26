@@ -1,4 +1,4 @@
-#include "client_common.h"
+#include "client.h"
 
 void sigint(int signum){
     send_msg("over");

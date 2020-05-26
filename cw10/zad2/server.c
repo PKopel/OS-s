@@ -1,4 +1,4 @@
-#include "../server_common.h"
+#include "../common/server.h"
 
 int send_ping(client client){
     if( sendto(client.socket_fd, "ping", 4, 0, &client.addr, sizeof(client.addr) ) == -1 ) error("write to socket");

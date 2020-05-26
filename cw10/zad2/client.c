@@ -1,4 +1,4 @@
-#include "../client_common.h"
+#include "../common/client.h"
 
 struct sockaddr server_addr;
 struct sockaddr client_addr;

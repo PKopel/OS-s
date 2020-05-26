@@ -1,4 +1,4 @@
-#include "../client_common.h"
+#include "../common/client.h"
 
 void start_client_socket( int* sock_fd, int family, int protocol){
     struct sockaddr sa;

@@ -1,4 +1,4 @@
-#include "../server_common.h"
+#include "../common/server.h"
 
 
 int send_ping(client client){

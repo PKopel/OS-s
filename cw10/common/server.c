@@ -1,4 +1,4 @@
-#include "server_common.h"
+#include "server.h"
 
 void make_move(char* move){
     char symbol;
