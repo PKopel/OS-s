@@ -7,17 +7,17 @@ int inet_fd = -1;
 
 client clients[MAX_CLIENTS];
 int clients_number;
-pthread_mutex_t clients_mtx = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t clients_mtx;
 int waiting_for_pair;
 pair pairs[MAX_CLIENTS/2];
 pthread_mutex_t pairs_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 void make_move(char* move){
     char symbol;
-    int pair_id, field;
-    sscanf(move, "%c %d %d", &symbol, &pair_id, &field );
+    int client_id, field;
+    sscanf(move, "%c %lc %d", &symbol, &client_id, &field );
     pthread_mutex_lock(&pairs_mtx);
-    pair players = pairs[pair_id];
+    pair players = pairs[clients[client_id].pair_id];
     pthread_mutex_unlock(&pairs_mtx);
     switch (symbol) {
         case 'O':
@@ -36,7 +36,6 @@ void make_move(char* move){
 }
 
 void sigint(int signum) {
-    printf("SIGINT received - closing server\n");
     for (int i = 0; i < MAX_CLIENTS; i++){
         if (clients[i].active){
             send_msg(clients[i], "killed server");
@@ -47,6 +46,12 @@ void sigint(int signum) {
 
 void start_server(int protocol) {
     if (atexit(server_cleanup) == -1) error("atexit");
+
+    pthread_mutexattr_t rec_clients_mtx;
+
+    pthread_mutexattr_init(&rec_clients_mtx);
+    pthread_mutexattr_settype(&rec_clients_mtx, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(&clients_mtx, &rec_clients_mtx);
     
     struct sigaction act_int;
     act_int.sa_handler = sigint;
@@ -56,7 +61,6 @@ void start_server(int protocol) {
     
     for(int i = 0; i < MAX_CLIENTS; i++) {
         clients[i].socket_fd = -1;
-        clients[i].name = NULL;
         clients[i].active = 0;
         pairs[i/2].client_o = -1;
         pairs[i/2].client_x = -1;
@@ -83,25 +87,26 @@ int register_client(client client, char* msg) {
         return -1;
     char name[20];
     sscanf(msg,"%*c %s",name);
-    client.name = name;
-    client.active = 1;
-    client.pair_id = -1;
+    printf("%s\n", name);
     pthread_mutex_lock(&clients_mtx);
     int free_place;
     for(int i = 0; i< MAX_CLIENTS; i++){
         if(clients[i].socket_fd == -1) free_place = i;
-        else if(strcmp(clients[i].name,client.name) == 0) return -2;
+        else if(strcmp(clients[i].name,name) == 0) return -2;
     }
-    clients[free_place] = client;
     pthread_mutex_unlock(&clients_mtx);
-    if (++clients_number %2 == 0) {
+    printf("checking pairs\n");
+    if (++clients_number % 2 == 0) {
         pthread_mutex_lock(&pairs_mtx);
         for (int i = 0; i < MAX_CLIENTS/2; i++){
             if(pairs[i].client_x == -1){
                 pairs[i].client_x = waiting_for_pair;
                 pairs[i].client_o = free_place;
+                clients[free_place].pair_id = i;
+                clients[waiting_for_pair].pair_id = i;
+                printf("sending messages\n");
                 send_msg(clients[waiting_for_pair], "symbol X");
-                send_msg(clients[free_place], "symbol O");
+                send_msg(client, "symbol O");
                 break;
             }
         }
@@ -110,12 +115,16 @@ int register_client(client client, char* msg) {
         waiting_for_pair = free_place;
         send_msg(client, "waiting");
     }
+    clients[free_place].active = 1; 
+    memcpy(clients[free_place].name, name, 20);
+    clients[free_place].addr = client.addr;
+    clients[free_place].socket_fd = client.socket_fd;
     return free_place;
 }
 
 void remove_client(int index){
     client closing = clients[index];
-    if(close(closing.socket_fd) == -1) error("close socket");
+    //if(close(closing.socket_fd) == -1) error("close socket");
     closing.socket_fd = -1;
     clients_number--;
     if(closing.pair_id != -1){
@@ -151,7 +160,8 @@ int process_msg(client client, char* msg) {
         }
         break;
     case 'o':
-        remove_client(msg[1]);
+        printf("remove client\n");
+        remove_client(msg[5]);
         break;
     case 'X':
     case 'O':
@@ -173,7 +183,7 @@ void * ping_therad(void * arg) {
         pthread_mutex_lock(&clients_mtx);
 
         for (int i = 0; i < MAX_CLIENTS; ++i){
-            if(clients[i].active == 0){
+            if(clients[i].active == 0 && clients[i].socket_fd != -1){
                 remove_client(i);
             } else if(clients[i].socket_fd != -1) {
                 send_ping(clients[i]);

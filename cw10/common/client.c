@@ -1,7 +1,11 @@
 #include "client.h"
 
+char client_id;
+char over[7];
+
 void sigint(int signum){
-    send_msg("over");
+    sprintf(over,"over %c",client_id);
+    send_msg(over);
     exit(0);
 }
 
@@ -11,6 +15,8 @@ void start_client(int family, int protocol){
     sigemptyset(&act_int.sa_mask);
     act_int.sa_flags = 0;
     if ((sigaction(SIGINT, &act_int, NULL)) == -1) error("sigaction");
+
+    for(int i = 0; i < 9; i++) board[i] = '-';
     
     start_client_socket( &server_fd, family, protocol);
 
@@ -38,14 +44,15 @@ void print_board(){
 }
 
 int check_end(){
-    int end = 0;
-    char winner;
+    int end = 1;
+    char winner = '-';
+    for(int i = 0; i<9; i++) if(board[i]=='-') end = 0;
     for(int i = 0; i < 3; i++){
-        if(board[i] == board[i+1] && board[i] == board[i+2] && board[0] != '-'){
-            winner = board[i];
+        if(board[3*i] == board[3*i+1] && board[3*i] == board[3*i+2] && board[3*i] != '-'){
+            winner = board[3*i];
             end+=1;
         }
-        if(board[i] == board[i+3] && board[i] == board[i+6] && board[0] != '-'){
+        if(board[i] == board[i+3] && board[i] == board[i+6] && board[i] != '-'){
             winner = board[i];
             end+=1;
         }
@@ -54,11 +61,11 @@ int check_end(){
             winner = board[0];
             end+=1;
         }
-    if(board[2] == board[4] && board[2] == board[6] && board[0] != '-'){
+    if(board[2] == board[4] && board[2] == board[6] && board[2] != '-'){
             winner = board[2];
             end+=1;
         }
-    printf("Won player %c\n", winner);
+    if(end) printf("Won player %c\n", winner);
     return end;
 }
 
@@ -68,8 +75,9 @@ void read_move(){
         printf("enter field number (1-9 from upper left):\n");
         scanf("%d",&field);
     } while (board[field-1] != '-');
+    board[field-1] = symbol;
     char move[7];
-    sprintf(move,"%c %d %d", symbol, pair_id, field-1);
+    sprintf(move,"%c %lc %d", symbol, client_id, field-1);
     send_msg(move);
 }
 
@@ -91,7 +99,8 @@ void process_msg(char* msg){
         make_move(msg);
         break;
     case 'e':
-        send_msg("over");
+        sprintf(over,"over %c",client_id);
+        send_msg(over);
         exit(0);
         break;
     case 'p':
@@ -101,8 +110,9 @@ void process_msg(char* msg){
         printf("waiting for partner\n");
         break;
     case 's': 
-        sscanf(msg, "%*s, %c", &symbol);
+        sscanf(msg, "%*s %c", &symbol);
         printf("starting game, your symbol: %c\n", symbol);
+        if(symbol == 'X') read_move();
         break;
     case 'k':
     case 't':
@@ -110,6 +120,7 @@ void process_msg(char* msg){
         printf("%s\n", msg);
         exit(0);
     default:
+        if(msg[0] < MAX_CLIENTS) client_id = msg[0];
         break;
     }
 }

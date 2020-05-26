@@ -57,7 +57,7 @@ void* socket_thread(void* arg){
                     }
                 }
         }
-        pthread_mutex_lock(&clients_mtx);
+        //pthread_mutex_lock(&clients_mtx);
         for(int i = 0; i < MAX_CLIENTS; i++){
             if(FD_ISSET(clients[i].socket_fd, &read_set)){
                 if( (nread = read(clients[i].socket_fd, buf, sizeof(buf))) == -1 ) error("client read");
@@ -70,6 +70,7 @@ void* socket_thread(void* arg){
                 }
             }
         }
+        //pthread_mutex_unlock(&clients_mtx);
     }
     return 0;
 }

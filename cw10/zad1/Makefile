@@ -5,7 +5,7 @@ US_PATH = abcde
 
 CLIENT_NAME = client
 CONNECTION = unix
-ADDRESS = localhost:8888 
+ADDRESS = abcde
 
 clean:
 	rm -f *.o

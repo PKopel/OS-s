@@ -5,7 +5,7 @@ typedef struct client{
     int socket_fd;
     int active;
     int pair_id;
-    char* name;
+    char name[20];
 } client;
 
 typedef struct pair{
