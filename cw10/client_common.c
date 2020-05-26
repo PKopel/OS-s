@@ -1,16 +1,5 @@
 #include "client_common.h"
 
-void start_client_socket(char* sock_name, int* sock_fd, int family, int protocol){
-    struct sockaddr sa;
-    socklen_t sa_len;
-    make_sockaddr(&sa, &sa_len, sock_name, family, 0);
-
-    if( sock_fd = socket(family, protocol, 0) == -1 ) error("socket");
-    while (connect(sock_fd, &sa, &sa_len) == -1)
-        if (errno == ENOENT) sleep(1);
-        else error("connect");
-}
-
 void sigint(int signum){
     send_msg("over");
     exit(0);
@@ -23,10 +12,10 @@ void start_client(int family, int protocol){
     act_int.sa_flags = 0;
     if ((sigaction(SIGINT, &act_int, NULL)) == -1) error("sigaction");
     
-    start_client_socket(server_name, &server_fd, family, protocol);
+    start_client_socket( &server_fd, family, protocol);
 
     char login_msg[30];
-    sprintf(login_msg,"l %s",name);
+    sprintf(login_msg,"l %s",client_name);
     send_msg(login_msg);
 }
     

@@ -23,16 +23,6 @@ void make_move(char* move){
     
 }
 
-void start_server_socket(int* sock_fd, char* sock_name, int family, int protocol) {
-    struct sockaddr sa;
-    socklen_t sa_len;
-    make_sockaddr(&sa, &sa_len, sock_name, family, 1);
-
-    if ((sock_fd = socket(family, protocol, 0)) == -1) error("socket");
-    if ((bind(sock_fd, &sa, sa_len)) == -1) error("bind");
-    if ((listen(sock_fd, SOMAXCONN)) == -1) error("listen");
-}
-
 void sigint(int signum) {
     printf("SIGINT received - closing server\n");
     for (int i = 0; i < MAX_CLIENTS; i++){

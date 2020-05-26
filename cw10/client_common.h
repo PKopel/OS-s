@@ -2,7 +2,7 @@
 
 int server_fd;
 char* server_name;
-char* name;
+char* client_name;
 int pair_id;
 
 char board[9];

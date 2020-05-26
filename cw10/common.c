@@ -14,6 +14,7 @@ int make_sockaddr(struct sockaddr *sa, socklen_t *len, const char *name,int doma
             errno = ENAMETOOLONG;
             error("AF_UNIX name too long");
         }
+        unlink(name);
         strcpy(sunp->sun_path, name);
         sunp->sun_family = AF_UNIX;
         *len = sizeof(*sunp);

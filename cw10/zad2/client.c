@@ -1,18 +1,21 @@
 #include "../client_common.h"
 
+struct sockaddr server_addr;
+struct sockaddr client_addr;
+
 void start_client_socket( int* sock_fd, int family, int protocol){
-    struct sockaddr sa;
-    socklen_t sa_len;
-    make_sockaddr(&sa, &sa_len, server_name, family, 0);
+    socklen_t server_len;
+    make_sockaddr(&server_addr, &server_len, server_name, family, 0);
+
+    socklen_t client_len;
+    make_sockaddr(&client_addr, &client_len, client_name, family, 0);
 
     if( sock_fd = socket(family, protocol, 0) == -1 ) error("socket");
-    while (connect(sock_fd, &sa, &sa_len) == -1)
-        if (errno == ENOENT) sleep(1);
-        else error("connect");
+    if( bind(sock_fd, &client_addr, client_len) == -1) error("bind");
 }
 
 void send_msg(char* msg){
-    if( write(server_fd, msg, strlen(msg) + 1 ) == -1) error("write");
+    if( sendto(server_fd, msg, strlen(msg) + 1, 0, &server_addr, sizeof(server_addr) ) == -1) error("write");
 }
 
 int main(int argc, char** argv){

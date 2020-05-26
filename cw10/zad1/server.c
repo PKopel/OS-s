@@ -11,6 +11,16 @@ int send_msg(client client, char* msg){
     if( write(client.socket_fd, msg, msg_len ) == -1 ) error("write to socket");
 }
 
+void start_server_socket(int* sock_fd, char* sock_name, int family, int protocol) {
+    struct sockaddr sa;
+    socklen_t sa_len;
+    make_sockaddr(&sa, &sa_len, sock_name, family, 1);
+
+    if ((sock_fd = socket(family, protocol, 0)) == -1) error("socket");
+    if ((bind(sock_fd, &sa, sa_len)) == -1) error("bind");
+    if ((listen(sock_fd, SOMAXCONN)) == -1) error("listen");
+}
+
 void* socket_thread(void* arg){
     int client_fd, hwm_fd = 0;
     char buf[30];
@@ -25,7 +35,7 @@ void* socket_thread(void* arg){
         if( select(hwm_fd + 1, &read_set, NULL, NULL, NULL) == -1) error("select");
         if (FD_ISSET(inet_fd, &read_set)) {
             if( (client_fd = accept(inet_fd, NULL, 0)) == -1 ) error("client accept");
-            if(nread = read(client_fd, buf, sizeof(buf)) == -1 ) error("client read");
+            if( nread = read(client_fd, buf, sizeof(buf)) == -1 ) error("client read");
                 if(nread > 0) {
                     client client;
                     client.socket_fd = client_fd;
@@ -37,7 +47,7 @@ void* socket_thread(void* arg){
         }
         if( FD_ISSET(unix_fd, &read_set)) {
             if( (client_fd = accept(unix_fd, NULL, 0)) == -1 ) error("client accept");
-            if(nread = read(client_fd, buf, sizeof(buf)) == -1 ) error("client read");
+            if( nread = read(client_fd, buf, sizeof(buf)) == -1 ) error("client read");
                 if(nread > 0) {
                     client client;
                     client.socket_fd = client_fd;
