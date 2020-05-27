@@ -14,8 +14,8 @@ pthread_mutex_t pairs_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 void make_move(char* move){
     char symbol;
-    int client_id, field;
-    sscanf(move, "%c %lc %d", &symbol, &client_id, &field );
+    int client_id;
+    sscanf(move, "%c %*d %d", &symbol, &client_id );
     pthread_mutex_lock(&pairs_mtx);
     pair players = pairs[clients[client_id].pair_id];
     pthread_mutex_unlock(&pairs_mtx);
@@ -87,7 +87,6 @@ int register_client(client client, char* msg) {
         return -1;
     char name[20];
     sscanf(msg,"%*c %s",name);
-    printf("%s\n", name);
     pthread_mutex_lock(&clients_mtx);
     int free_place;
     for(int i = 0; i< MAX_CLIENTS; i++){
@@ -95,7 +94,6 @@ int register_client(client client, char* msg) {
         else if(strcmp(clients[i].name,name) == 0) return -2;
     }
     pthread_mutex_unlock(&clients_mtx);
-    printf("checking pairs\n");
     if (++clients_number % 2 == 0) {
         pthread_mutex_lock(&pairs_mtx);
         for (int i = 0; i < MAX_CLIENTS/2; i++){
@@ -104,7 +102,6 @@ int register_client(client client, char* msg) {
                 pairs[i].client_o = free_place;
                 clients[free_place].pair_id = i;
                 clients[waiting_for_pair].pair_id = i;
-                printf("sending messages\n");
                 send_msg(clients[waiting_for_pair], "symbol X");
                 send_msg(client, "symbol O");
                 break;
@@ -123,26 +120,26 @@ int register_client(client client, char* msg) {
 }
 
 void remove_client(int index){
-    client closing = clients[index];
-    //if(close(closing.socket_fd) == -1) error("close socket");
-    closing.socket_fd = -1;
+    //if(close(clients[index].socket_fd) == -1) error("close socket");
+    clients[index].socket_fd = -1;
     clients_number--;
-    if(closing.pair_id != -1){
+    if(clients[index].pair_id != -1){
         pthread_mutex_lock(&pairs_mtx);
-        pair pair = pairs[closing.pair_id];
+        pair pair = pairs[clients[index].pair_id];
         int other_id = pair.client_o == index ? pair.client_x : pair.client_o;
-        client other = clients[other_id];
-        other.pair_id = -1;
-        closing.pair_id = -1;
-        pair.client_o = -1;
-        pair.client_x = -1;
+        printf("in pair %d %d\n",index,other_id);
+        clients[other_id].pair_id = -1;
+        clients[index].pair_id = -1;
+        pairs[clients[index].pair_id].client_o = -1;
+        pairs[clients[index].pair_id].client_x = -1;
         pthread_mutex_unlock(&pairs_mtx);
-        send_msg(other, "end");
+        send_msg(clients[other_id], "end");
     }
 }
 
 int process_msg(client client, char* msg) {
-    char id;
+    int id;
+    char cid[3];
     switch (msg[0])
     {
     case 'l':
@@ -155,13 +152,16 @@ int process_msg(client client, char* msg) {
             send_msg(client, "name in use");
             return -1;
         default:  
-            send_msg(client, &id);
+            sprintf(cid,"%d ",id);
+            printf("%s\n",cid);
+            send_msg(client, cid);
             return 0;
         }
         break;
     case 'o':
         printf("remove client\n");
-        remove_client(msg[5]);
+        sscanf(msg,"%*s %d",&id);
+        remove_client(id);
         break;
     case 'X':
     case 'O':

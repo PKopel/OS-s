@@ -4,8 +4,8 @@ PORT = 8888
 US_PATH = abcde
 
 CLIENT_NAME = client
-CONNECTION = unix
-ADDRESS = localhost:8888 
+CONNECTION = inet
+ADDRESS = "localhost:8888" 
 
 clean:
 	rm -f *.o

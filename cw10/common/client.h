@@ -1,6 +1,6 @@
 #include "common.h"
 
-int server_fd;
+int client_fd;
 char* server_name;
 char* client_name;
 int pair_id;

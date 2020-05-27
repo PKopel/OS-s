@@ -1,15 +1,28 @@
 #include "client.h"
 
-char client_id;
+int client_id;
 char over[7];
 
 void sigint(int signum){
-    sprintf(over,"over %c",client_id);
+    sprintf(over,"over %d",client_id);
     send_msg(over);
     exit(0);
 }
+    
+
+void client_cleanup() {
+    if(family == AF_LOCAL) {
+        if ((close(client_fd)) == -1) error("unix close");
+        if ((unlink(client_name)) == -1) error("unix unlink");
+    }
+
+    if(family == AF_INET) {
+        if ((close(client_fd)) == -1) error("inet close");
+    }
+}
 
 void start_client(int family, int protocol){
+    if (atexit(client_cleanup) == -1) error("atexit");
     struct sigaction act_int;
     act_int.sa_handler = sigint;
     sigemptyset(&act_int.sa_mask);
@@ -18,23 +31,11 @@ void start_client(int family, int protocol){
 
     for(int i = 0; i < 9; i++) board[i] = '-';
     
-    start_client_socket( &server_fd, family, protocol);
+    start_client_socket( &client_fd, family, protocol);
 
     char login_msg[30];
     sprintf(login_msg,"l %s",client_name);
     send_msg(login_msg);
-}
-    
-
-void client_cleanup() {
-    if(family == AF_LOCAL) {
-        if ((close(server_fd)) == -1) error("unix close");
-        if ((unlink(server_name)) == -1) error("unix unlink");
-    }
-
-    if(family == AF_INET) {
-        if ((close(server_fd)) == -1) error("inet close");
-    }
 }
 
 void print_board(){
@@ -77,14 +78,14 @@ void read_move(){
     } while (board[field-1] != '-');
     board[field-1] = symbol;
     char move[7];
-    sprintf(move,"%c %lc %d", symbol, client_id, field-1);
+    sprintf(move,"%c %d %d", symbol, field-1, client_id);
     send_msg(move);
 }
 
 void make_move(char* msg){
     int field;
     char new_symbol;
-    sscanf(msg,"%c %*d %d",&new_symbol,&field);
+    sscanf(msg,"%c %d",&new_symbol,&field);
     board[field] = new_symbol;
     print_board();
     if(check_end()) send_msg("E");
@@ -92,35 +93,35 @@ void make_move(char* msg){
 }
 
 void process_msg(char* msg){
-     switch (msg[0])
-    {
-    case 'X':
-    case 'O':
-        make_move(msg);
-        break;
-    case 'e':
-        sprintf(over,"over %c",client_id);
-        send_msg(over);
-        exit(0);
-        break;
-    case 'p':
-        send_msg("response");
-        break;
-    case 'w':
-        printf("waiting for partner\n");
-        break;
-    case 's': 
-        sscanf(msg, "%*s %c", &symbol);
-        printf("starting game, your symbol: %c\n", symbol);
-        if(symbol == 'X') read_move();
-        break;
-    case 'k':
-    case 't':
-    case 'n':
-        printf("%s\n", msg);
-        exit(0);
-    default:
-        if(msg[0] < MAX_CLIENTS) client_id = msg[0];
-        break;
+    int cid;
+    switch (msg[0]){
+        case 'X':
+        case 'O':
+            make_move(msg);
+            break;
+        case 'e':
+            sprintf(over,"over %d",client_id);
+            send_msg(over);
+            exit(0);
+            break;
+        case 'p':
+            send_msg("response");
+            break;
+        case 'w':
+            printf("waiting for partner\n");
+            break;
+        case 's': 
+            sscanf(msg, "%*s %c", &symbol);
+            printf("starting game, your symbol: %c\n", symbol);
+            if(symbol == 'X') read_move();
+            break;
+        case 'k':
+        case 't':
+        case 'n':
+            printf("%s\n", msg);
+            exit(0);
+        default:
+            if(sscanf(msg,"%d",&cid) > 0) client_id = cid;
+            break;
     }
 }

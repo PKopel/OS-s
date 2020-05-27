@@ -15,7 +15,7 @@ void start_client_socket( int* sock_fd, int family, int protocol){
 }
 
 void send_msg(char* msg){
-    if( sendto(server_fd, msg, strlen(msg) + 1, 0, &server_addr, sizeof(server_addr) ) == -1) error("write");
+    if( sendto(client_fd, msg, strlen(msg), 0, &server_addr, sizeof(server_addr) ) == -1) error("sendto");
 }
 
 int main(int argc, char** argv){
@@ -33,7 +33,7 @@ int main(int argc, char** argv){
     start_client(family, SOCK_STREAM);
     char buf[30];
     while(1){
-      if( read(server_fd, buf, sizeof(buf)) == -1 ) error("read");  
+      if( read(client_fd, buf, sizeof(buf)) == -1 ) error("read");  
       process_msg(buf);
     }
 }

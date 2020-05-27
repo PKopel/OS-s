@@ -35,7 +35,7 @@ void* socket_thread(void* arg){
         if( select(hwm_fd + 1, &read_set, NULL, NULL, NULL) == -1) error("select");
         if (FD_ISSET(inet_fd, &read_set)) {
             if( (client_fd = accept(inet_fd, NULL, 0)) == -1 ) error("client accept");
-            if( (nread = read(client_fd, buf, sizeof(buf))) == -1 ) error("client read");
+            if( (nread = recv(client_fd, buf, sizeof(buf),0)) == -1 ) error("new client recv");
                 if(nread > 0) {
                     client client;
                     client.socket_fd = client_fd;
@@ -47,7 +47,7 @@ void* socket_thread(void* arg){
         }
         if( FD_ISSET(unix_fd, &read_set)) {
             if( (client_fd = accept(unix_fd, NULL, 0)) == -1 ) error("client accept");
-            if( (nread = read(client_fd, buf, sizeof(buf))) == -1 ) error("client read");
+            if( (nread = recv(client_fd, buf, sizeof(buf),0)) == -1 ) error("new client recv");
                 if(nread > 0) {
                     client client;
                     client.socket_fd = client_fd;
@@ -60,7 +60,7 @@ void* socket_thread(void* arg){
         //pthread_mutex_lock(&clients_mtx);
         for(int i = 0; i < MAX_CLIENTS; i++){
             if(FD_ISSET(clients[i].socket_fd, &read_set)){
-                if( (nread = read(clients[i].socket_fd, buf, sizeof(buf))) == -1 ) error("client read");
+                if( (nread = recv(clients[i].socket_fd, buf, sizeof(buf),0)) == -1 ) error("client recv");
                 if(nread == 0) {
                     FD_CLR(clients[i].socket_fd, &set);
                     if (clients[i].socket_fd == hwm_fd) hwm_fd--;
