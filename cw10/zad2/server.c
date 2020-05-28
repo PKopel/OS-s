@@ -17,6 +17,7 @@ void start_server_socket(int* sock_fd, char* sock_name, int family, int protocol
 
     if ((*sock_fd = socket(family, protocol, 0)) == -1) error("socket");
     if ((bind(*sock_fd, &sa, sa_len)) == -1) error("bind");
+    if ( fcntl(*sock_fd, F_SETFL, O_NONBLOCK, 1 ) == -1 ) error("fcntl");
 }
 
 int find_client(struct sockaddr addr){
@@ -39,18 +40,22 @@ void* socket_thread(void* arg){
     ssize_t nrecv;
     client client;
     while (1) {
-        if( (nrecv = recvfrom(unix_fd, buf, sizeof(buf), 0, &sa, &sa_len)) == -1) error("recvfrom");
-        if(( client_id = find_client(sa)) == -1) {
-            client.socket_fd = unix_fd;
-            client.addr = sa;
-        } else client = clients[client_id];
-        process_msg(client, buf);
-        if( (nrecv = recvfrom(inet_fd, buf, sizeof(buf), 0, &sa, &sa_len)) == -1) error("recvfrom");
-        if(( client_id = find_client(sa)) == -1) {
-            client.socket_fd = inet_fd;
-            client.addr = sa;
-        } else client = clients[client_id];
-        process_msg(client, buf);
+        if( (nrecv = recvfrom(unix_fd, buf, sizeof(buf), O_NONBLOCK, &sa, &sa_len)) == -1 && errno != EAGAIN && errno != EWOULDBLOCK) error("recvfrom");
+        if(nrecv > 0){
+            if(( client_id = find_client(sa)) == -1) {
+                client.socket_fd = unix_fd;
+                client.addr = sa;
+            } else client = clients[client_id];
+            process_msg(client, buf);
+        }
+        if( (nrecv = recvfrom(inet_fd, buf, sizeof(buf),  O_NONBLOCK, &sa, &sa_len)) == -1 && errno != EAGAIN && errno != EWOULDBLOCK) error("recvfrom");
+        if(nrecv > 0){
+            if(( client_id = find_client(sa)) == -1) {
+                client.socket_fd = inet_fd;
+                client.addr = sa;
+            } else client = clients[client_id];
+            process_msg(client, buf);
+        }
     }
     return 0;
 }

@@ -12,11 +12,13 @@ void sigint(int signum){
 
 void client_cleanup() {
     if(family == AF_LOCAL) {
+        printf("closing\n");
         if ((close(client_fd)) == -1) error("unix close");
         if ((unlink(client_name)) == -1) error("unix unlink");
     }
 
     if(family == AF_INET) {
+        printf("closing\n");
         if ((close(client_fd)) == -1) error("inet close");
     }
 }
@@ -28,14 +30,15 @@ void start_client(int family, int protocol){
     sigemptyset(&act_int.sa_mask);
     act_int.sa_flags = 0;
     if ((sigaction(SIGINT, &act_int, NULL)) == -1) error("sigaction");
-
+    printf("atexit & sig\n");
     for(int i = 0; i < 9; i++) board[i] = '-';
     
     start_client_socket( &client_fd, family, protocol);
-
+    printf("socket\n");
     char login_msg[30];
     sprintf(login_msg,"l %s",client_name);
     send_msg(login_msg);
+    printf("msg\n");
 }
 
 void print_board(){

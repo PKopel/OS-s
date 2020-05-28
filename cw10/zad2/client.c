@@ -25,12 +25,11 @@ int main(int argc, char** argv){
     }
 
     client_name = argv[1];
-    int family;
     if(strcmp(argv[2],"unix") == 0) family = AF_LOCAL;
     if(strcmp(argv[2],"inet") == 0) family = AF_INET;
     server_name = argv[3];
 
-    start_client(family, SOCK_STREAM);
+    start_client(family, SOCK_DGRAM);
     char buf[30];
     while(1){
       if( read(client_fd, buf, sizeof(buf)) == -1 ) error("read");  

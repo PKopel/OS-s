@@ -9,6 +9,7 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #define MAX_CLIENTS 20
 

@@ -36,11 +36,6 @@ void make_move(char* move){
 }
 
 void sigint(int signum) {
-    for (int i = 0; i < MAX_CLIENTS; i++){
-        if (clients[i].active){
-            send_msg(clients[i], "killed server");
-        }
-    }
     exit(0);
 }
 
@@ -72,12 +67,19 @@ void start_server(int protocol) {
 }
 
 void server_cleanup() {
+    for (int i = 0; i < MAX_CLIENTS; i++){
+        if (clients[i].active){
+            send_msg(clients[i], "killed server");
+        }
+    }
     if(unix_fd != -1) {
+        printf("closing\n");
         if ((close(unix_fd)) == -1) error("unix close");
         if ((unlink(unix_name)) == -1) error("unix unlink");
     }
 
     if(inet_fd != -1) {
+        printf("closing\n");
         if ((close(inet_fd)) == -1) error("inet close");
     }
 }
@@ -120,7 +122,6 @@ int register_client(client client, char* msg) {
 }
 
 void remove_client(int index){
-    //if(close(clients[index].socket_fd) == -1) error("close socket");
     clients[index].socket_fd = -1;
     clients_number--;
     if(clients[index].pair_id != -1){
