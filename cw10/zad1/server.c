@@ -1,6 +1,8 @@
 #include "../common/server.h"
 
 
+fd_set set, read_set;
+
 void send_ping(client client){
     if( write(client.socket_fd, "ping", 4 ) == -1 ) error("write to socket");
     client.active = 0;
@@ -24,7 +26,6 @@ void start_server_socket(int* sock_fd, char* sock_name, int family, int protocol
 void* socket_thread(void* arg){
     int client_fd, hwm_fd = 0;
     char buf[30];
-    fd_set set, read_set;
     ssize_t nread;
     hwm_fd = unix_fd > inet_fd ? unix_fd > hwm_fd ? unix_fd : hwm_fd : hwm_fd > inet_fd ? hwm_fd : inet_fd ;
     FD_ZERO(&set);
