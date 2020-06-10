@@ -1,4 +1,6 @@
-Zadanie 3. Testy i pomiary (50%)
+# To zadanie nie działa
+
+## Zadanie 3. Testy i pomiary (50%)
 (25%) Przygotuj plik Makefile, zawierający polecenie uruchamiania testów oraz polecenia kompilacji programu z zad 2 na trzy sposoby:
 Z wykorzystaniem bibliotek statycznych,
 Z wykorzystaniem bibliotek dzielonych (dynamiczne, ładowane przy uruchomieniu programu),
