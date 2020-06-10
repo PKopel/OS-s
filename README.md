@@ -1,5 +1,5 @@
 # OS-s
-Assignments from course in UNIX/LINUX programing
+Assignments from course in UNIX/LINUX programming
 
 ## Overview
 Repository consists of ten tasks on topics:
