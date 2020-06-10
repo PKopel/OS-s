@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "sysprog.h": "c",
-        "stat.h": "c",
-        "unistd.h": "c",
-        "fcntl.h": "c"
-    },
-    "C_Cpp.errorSquiggles": "Enabled"
-}
