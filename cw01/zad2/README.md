@@ -1,4 +1,4 @@
-Zadanie 2. Program korzystający z biblioteki (25%)
+## Zadanie 2. Program korzystający z biblioteki (25%)
 Napisz program testujący działanie funkcji z biblioteki z zadania 1.
 
 Jako argumenty przekaż liczbę elementów tablicy głównej (liczbę par plików) oraz listę zadań do wykonania. Zadania mogą stanowić zadania porównania wszystkich par w sekwencji lub zadania usunięcia bloku o podanym indeksie bądź usunięcia operacji o podanym indeksie.
