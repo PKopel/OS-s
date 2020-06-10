@@ -1,4 +1,4 @@
-Zadanie 2. Równoległe mnożenie macierzy (50%)
+## Zadanie 2. Równoległe mnożenie macierzy (50%)
 Napisz program macierz do równoległego mnożenia macierzy — zawartość każdej z macierzy (wejściowej lub wynikowej) znajduje się w osobnych plikach. Argumenty operacji mnożenia są treścią pliku lista, będącego pierwszym argumentem wywołania programu. Plik lista zawiera, w pojedynczej linii:
 
 Nazwę pliku z  pierwszą macierzą wejściową. 
@@ -20,3 +20,5 @@ Napisz pomocniczy program, który:
 
 Tworzy określoną liczbę plików z treścią macierzy. Rozmiar tworzonych macierzy, dla odrębnych par macierzy, jest losowy ∈ [Min, Max], gdzie: Min, Max są argumentami programu, przy czym należy zadbać, aby (dla danej pary) liczba kolumn macierzy A była równa liczbie wierszy macierzy B.
 Umożliwia sprawdzenie poprawności otrzymanych wyników mnożenia — implementacja własna lub  przy wykorzystaniu dowolnej biblioteki do wykonywania testów jednostkowych
+
+# To rozwiązanie nie działa poprawnie dla więcej niż 1 procesu liczącego

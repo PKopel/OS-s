@@ -5,10 +5,12 @@ Jako argumenty przekaż liczbę elementów tablicy głównej (liczbę par plikó
 
 Operacje mogą być specyfikowane w linii poleceń na przykład jak poniżej:
 
-create_table rozmiar — stworzenie tablicy o rozmiarze "rozmiar"
-compare_pairs file1A.txt:file1B.txt file2A.txt:file2B.txt … — porównanie para plików:  file1A.txt z file1B.txt, file2A.txt z file2B.txt, itd
-remove_block index — usuń z tablicy bloków o indeksie index
+- create_table rozmiar — stworzenie tablicy o rozmiarze "rozmiar"
+- compare_pairs file1A.txt:file1B.txt file2A.txt:file2B.txt … — porównanie para plików:  file1A.txt z file1B.txt, file2A.txt z file2B.txt, itd
+- remove_block index — usuń z tablicy bloków o indeksie index
 remove_operation block_index operation_index — usuń z bloku o indeksie block_index operację o indeksie operation_index
+
+
 Program powinien stworzyć tablice bloków o zadanej liczbie elementów
 
 W programie zmierz, wypisz na konsolę i zapisz  do pliku z raportem  czasy realizacji podstawowych operacji:

@@ -1,11 +1,11 @@
-Zadanie 4 (45%)
+## Zadanie 4 (45%)
 Napisz dwa programy: sender program wysyłający sygnały SIGUSR1 i  catcher - program zliczający 
 ilość odebranych sygnałów. Ilość sygnałów SIGUSR1 wysyłanych przez pierwszy program powinna być 
 określana w parametrze wywołania tego programu. Program catcher jest uruchamiany najpierw, 
 wypisuje swój numer PID i czeka na sygnały SIGUSR1 i SIGUSR2. Wszystkie pozostałe sygnały są 
 blokowane. Program sender przyjmuje trzy parametry: PID procesu catcher, ilość sygnałów do 
 wysłania i tryb wysłania sygnałów.
-
+- - - - - 
 Po transmisji wszystkich sygnałów SIGUSR1 sender powinien wysłać sygnał SIGUSR2, po otrzymaniu 
 którego catcher wysyła do sendera tyle sygnałów SIGUSR1, ile sam ich otrzymał a „transmisję” 
 kończy wysłaniem sygnału SIGUSR2, wypisaniem liczby odebranych sygnałów i zakończeniem działania. 
@@ -15,16 +15,16 @@ SIGUSR1 oraz o tym, ile powinien ich otrzymać i kończy działanie.
 
 UWAGA! W żaden sposób nie opóźniamy wysyłania sygnałów, wszelkie "gubienie" sygnałów jest zjawiskiem naturalnym.
 
-a) Wysyłanie sygnałów w obu programach należy wykonać w następujących trybach: (30%)
+1. Wysyłanie sygnałów w obu programach należy wykonać w następujących trybach: (30%)
 
-KILL - za pomocą funkcji kill
-SIGQUEUE - za pomocą funkcji sigqueue - wraz z przesłanym sygnałem catcher wysyła numer kolejnego 
+- KILL - za pomocą funkcji kill
+- SIGQUEUE - za pomocą funkcji sigqueue - wraz z przesłanym sygnałem catcher wysyła numer kolejnego 
 odsyłanego sygnału, dzięki czemu sender wie, ile dokładnie catcher odebrał, a tym samym wysłał do 
 niego sygnałów. Wypisz tę dodatkową informację w senderze.
-SIGRT - zastępując SIGUSR1 i SIGUSR2 dwoma dowolnymi sygnałami czasu rzeczywistego wysyłanymi za 
+- SIGRT - zastępując SIGUSR1 i SIGUSR2 dwoma dowolnymi sygnałami czasu rzeczywistego wysyłanymi za 
 pomocą kill. Jaka liczba sygnałów będzie teraz odebrana?
 
-b) Zmodyfikuj powyższe programy, dodając potwierdzenie odbioru sygnału po każdorazowym ich odebraniu 
+2. Zmodyfikuj powyższe programy, dodając potwierdzenie odbioru sygnału po każdorazowym ich odebraniu 
 przez program catcher. W tym celu, catcher wysyła do sendera sygnał SIGUSR1 informujący o odbiorze sygnału. 
 Sender powinien wysłać kolejny sygnał dopiero po uzyskaniu tego potwierdzenia. Zapewnij rozwiązanie, w którym 
 ilość sygnałów odebranych jest zgodna z ilością sygnałów wysłanych, i w którym nie dochodzi do zakleszczenia. (15%)
